@@ -1,0 +1,25 @@
+<?php
+
+return [
+    'title' => 'FiberHome OLT Settings',
+    'snmp_timeout' => 'SNMP Timeout',
+    'snmp_timeout_help' => 'Timeout for SNMP requests in milliseconds (1000-30000)',
+    'snmp_retries' => 'SNMP Retries',
+    'snmp_retries_help' => 'Number of retries for failed SNMP requests (1-10)',
+    'polling_interval' => 'Polling Interval',
+    'polling_interval_help' => 'Interval between device polls in seconds (60-3600)',
+    'alert_threshold_cpu' => 'CPU Alert Threshold',
+    'alert_threshold_cpu_help' => 'CPU usage percentage that triggers alerts (50-100%)',
+    'alert_threshold_memory' => 'Memory Alert Threshold',
+    'alert_threshold_memory_help' => 'Memory usage percentage that triggers alerts (50-100%)',
+    'alert_threshold_temperature' => 'Temperature Alert Threshold',
+    'alert_threshold_temperature_help' => 'Temperature in Celsius that triggers alerts (40-100°C)',
+    'enable_auto_discovery' => 'Enable Auto Discovery',
+    'enable_auto_discovery_help' => 'Automatically discover new ONUs connected to OLTs',
+    'enable_alerts' => 'Enable Alerts',
+    'enable_alerts_help' => 'Send alerts for device issues and performance problems',
+    'save_settings' => 'Save Settings',
+    'updated_success' => 'Settings updated successfully',
+    'updated_error' => 'Error updating settings',
+    'save_error' => 'Error saving settings',
+];

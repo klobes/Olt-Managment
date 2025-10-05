@@ -1,0 +1,29 @@
+{
+  "name": "fiberhome-olt-manager",
+  "version": "1.0.0",
+  "description": "Fiberhome OLT Management Plugin for Botble CMS",
+  "main": "index.js",
+  "scripts": {
+    "dev": "npm run development",
+    "development": "mix",
+    "watch": "mix watch",
+    "watch-poll": "mix watch -- --watch-options-poll=1000",
+    "hot": "mix watch --hot",
+    "prod": "npm run production",
+    "production": "mix --production"
+  },
+  "keywords": [
+    "botble",
+    "fiberhome",
+    "olt",
+    "snmp",
+    "network-management",
+    "gpon",
+    "epon"
+  ],
+  "author": "Botble Technologies",
+  "license": "MIT",
+  "devDependencies": {
+    "laravel-mix": "^6.0.0"
+  }
+}

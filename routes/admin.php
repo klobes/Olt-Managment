@@ -1,0 +1,64 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use Botble\FiberHomeOLTManager\Http\Controllers\OLTController;
+use Botble\FiberHomeOLTManager\Http\Controllers\ONUController;
+use Botble\FiberHomeOLTManager\Http\Controllers\BandwidthProfileController;
+use Botble\FiberHomeOLTManager\Http\Controllers\SettingsController;
+use Botble\FiberHomeOLTManager\Http\Controllers\DashboardController;
+
+Route::group(['prefix' => 'fiberhome', 'as' => 'fiberhome.'], function () {
+    
+    // Dashboard
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    
+    // OLT Management
+    Route::group(['prefix' => 'olt', 'as' => 'olt.'], function () {
+        Route::get('/', [OLTController::class, 'index'])->name('index');
+        Route::get('/datatable', [OLTController::class, 'datatable'])->name('datatable');
+        Route::post('/', [OLTController::class, 'store'])->name('store');
+        Route::get('/{id}', [OLTController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [OLTController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [OLTController::class, 'update'])->name('update');
+        Route::delete('/{id}', [OLTController::class, 'destroy'])->name('destroy');
+        Route::get('/{id}/ports', [OLTController::class, 'ports'])->name('ports');
+        Route::post('/{id}/poll', [OLTController::class, 'poll'])->name('poll');
+        Route::post('/{id}/discover', [OLTController::class, 'discover'])->name('discover');
+    });
+    
+    // ONU Management
+    Route::group(['prefix' => 'onu', 'as' => 'onu.'], function () {
+        Route::get('/', [ONUController::class, 'index'])->name('index');
+        Route::get('/datatable', [ONUController::class, 'datatable'])->name('datatable');
+        Route::get('/available', [ONUController::class, 'available'])->name('available');
+        Route::get('/{id}', [ONUController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [ONUController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [ONUController::class, 'update'])->name('update');
+        Route::get('/{id}/configuration', [ONUController::class, 'configuration'])->name('configuration');
+        Route::post('/{id}/configure', [ONUController::class, 'configure'])->name('configure');
+        Route::post('/{id}/reboot', [ONUController::class, 'reboot'])->name('reboot');
+        Route::get('/{id}/performance', [ONUController::class, 'performance'])->name('performance');
+        Route::get('/{id}/bandwidth', [ONUController::class, 'bandwidth'])->name('bandwidth');
+    });
+    
+    // Bandwidth Profile Management
+    Route::group(['prefix' => 'bandwidth', 'as' => 'bandwidth.'], function () {
+        Route::get('/', [BandwidthProfileController::class, 'index'])->name('index');
+        Route::get('/datatable', [BandwidthProfileController::class, 'datatable'])->name('datatable');
+        Route::post('/', [BandwidthProfileController::class, 'store'])->name('store');
+        Route::get('/{id}', [BandwidthProfileController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [BandwidthProfileController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [BandwidthProfileController::class, 'update'])->name('update');
+        Route::delete('/{id}', [BandwidthProfileController::class, 'destroy'])->name('destroy');
+        Route::post('/{id}/assign', [BandwidthProfileController::class, 'assign'])->name('assign');
+    });
+    
+    // Settings
+    Route::group(['prefix' => 'settings', 'as' => 'settings.'], function () {
+        Route::get('/', [SettingsController::class, 'index'])->name('index');
+        Route::post('/update', [SettingsController::class, 'update'])->name('update');
+    });
+    
+    // Topology
+    Route::get('/topology', [DashboardController::class, 'topology'])->name('topology');
+});
