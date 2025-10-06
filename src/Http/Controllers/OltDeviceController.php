@@ -41,7 +41,7 @@ class OltDeviceController extends BaseController
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'ip_address' => 'required|ip|unique:olt_devices',
+            'ip_address' => 'required|ip|unique:om_olts',
             'vendor' => 'required|string|in:fiberhome,huawei,zte',
             'model' => 'required|string|max:255',
             'snmp_community' => 'required|string|max:255',
@@ -147,7 +147,7 @@ class OltDeviceController extends BaseController
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'ip_address' => 'required|ip|unique:olt_devices,ip_address,' . $id,
+            'ip_address' => 'required|ip|unique:om_olts,ip_address,' . $id,
             'snmp_community' => 'required|string|max:255',
             'snmp_version' => 'required|in:1,2c,3',
             'snmp_port' => 'required|integer|min:1|max:65535',
@@ -274,7 +274,7 @@ class OltDeviceController extends BaseController
     public function getTable(Request $request)
     {
         if ($request->ajax()) {
-            $devices = OltDevice::with(['onus'])->select('olt_devices.*');
+            $devices = OltDevice::with(['onus'])->select('om_olts.*');
             
             return datatables()
                 ->eloquent($devices)
