@@ -188,4 +188,37 @@ class BandwidthProfileController extends BaseController
                 ->setMessage(trans('plugins/fiberhome-olt-manager::bandwidth.assigned_error') . ': ' . $e->getMessage());
         }
     }
+    
+    /**
+     * Get DataTable for Bandwidth Profiles
+     */
+    public function getTable(Request $request)
+    {
+        if ($request->ajax()) {
+            $profiles = BandwidthProfile::select('bandwidth_profiles.*');
+            
+            return datatables()
+                ->eloquent($profiles)
+                ->addColumn('onu_count', function ($profile) {
+                    return $profile->assignedONUs()->count();
+                })
+                ->addColumn('priority', function ($profile) {
+                    $priorityClass = [
+                        'low' => 'secondary',
+                        'medium' => 'info',
+                        'high' => 'warning',
+                        'premium' => 'success'
+                    ];
+                    $class = $priorityClass[$profile->priority] ?? 'secondary';
+                    return '<span class="badge bg-' . $class . '">' . ucfirst($profile->priority) . '</span>';
+                })
+                ->addColumn('actions', function ($profile) {
+                    return view('plugins/fiberhome-olt-manager::bandwidth-profile.partials.actions', compact('profile'))->render();
+                })
+                ->rawColumns(['priority', 'actions'])
+                ->make(true);
+        }
+        
+        return response()->json(['error' => 'Invalid request'], 400);
+    }
 }

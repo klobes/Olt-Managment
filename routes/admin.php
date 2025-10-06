@@ -12,6 +12,7 @@ use Botble\FiberHomeOLTManager\Http\Controllers\TopologyController;
     
     // Dashboard
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/data', [DashboardController::class, 'getData'])->name('dashboard.data');
     
     // OLT Management
     Route::group(['prefix' => 'olt', 'as' => 'olt.'], function () {

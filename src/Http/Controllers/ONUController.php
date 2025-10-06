@@ -198,4 +198,88 @@ class ONUController extends BaseController
 
         return $response->setData($bandwidth ?: []);
     }
+    
+    /**
+     * Get DataTable for ONUs
+     */
+    public function getTable(Request $request)
+    {
+        if ($request->ajax()) {
+            $onus = Onu::with(['oltDevice'])->select('onus.*');
+            
+            return datatables()
+                ->eloquent($onus)
+                ->addColumn('olt_name', function ($onu) {
+                    return $onu->oltDevice ? $onu->oltDevice->name : 'N/A';
+                })
+                ->addColumn('pon_port', function ($onu) {
+                    return $onu->slot . '/' . $onu->port . ':' . $onu->onu_id;
+                })
+                ->addColumn('status', function ($onu) {
+                    $statusClass = [
+                        'online' => 'success',
+                        'offline' => 'danger',
+                        'los' => 'warning',
+                        'dying_gasp' => 'danger'
+                    ];
+                    $class = $statusClass[$onu->status] ?? 'secondary';
+                    return '<span class="badge bg-' . $class . '">' . ucfirst($onu->status) . '</span>';
+                })
+                ->addColumn('actions', function ($onu) {
+                    return view('plugins/fiberhome-olt-manager::onu.partials.actions', compact('onu'))->render();
+                })
+                ->rawColumns(['status', 'actions'])
+                ->make(true);
+        }
+        
+        return response()->json(['error' => 'Invalid request'], 400);
+    }
+    
+    /**
+     * Enable ONU
+     */
+    public function enable($id, BaseHttpResponse $response)
+    {
+        try {
+            $onu = Onu::findOrFail($id);
+            $this->onuService->enableONU($onu);
+
+            return $response
+                ->setMessage(trans('plugins/fiberhome-olt-manager::onu.enabled_success'));
+        } catch (\Exception $e) {
+            return $response
+                ->setError()
+                ->setMessage(trans('plugins/fiberhome-olt-manager::onu.enabled_error') . ': ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Disable ONU
+     */
+    public function disable($id, BaseHttpResponse $response)
+    {
+        try {
+            $onu = Onu::findOrFail($id);
+            $this->onuService->disableONU($onu);
+
+            return $response
+                ->setMessage(trans('plugins/fiberhome-olt-manager::onu.disabled_success'));
+        } catch (\Exception $e) {
+            return $response
+                ->setError()
+                ->setMessage(trans('plugins/fiberhome-olt-manager::onu.disabled_error') . ': ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Get available ONUs (not configured)
+     */
+    public function available(BaseHttpResponse $response)
+    {
+        $onus = Onu::whereNull('customer_name')
+            ->orWhere('customer_name', '')
+            ->get();
+            
+        return $response->setData($onus);
+    }
 }

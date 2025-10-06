@@ -108,4 +108,45 @@ class DashboardController extends BaseController
 
         return array_slice($alerts, 0, 10); // Return only 10 most recent alerts
     }
+    
+    /**
+     * Get dashboard data for real-time updates
+     */
+    public function getData(Request $request)
+    {
+        // Get statistics
+        $statistics = [
+            'total_olts' => OLT::count(),
+            'online_olts' => OLT::where('status', 'online')->count(),
+            'total_onus' => Onu::count(),
+            'online_onus' => Onu::where('status', 'online')->count(),
+            'offline_onus' => Onu::where('status', 'offline')->count(),
+        ];
+        
+        // Get performance data
+        $performance = [
+            'cpu' => OLT::where('status', 'online')->avg('cpu_usage') ?? 0,
+            'memory' => OLT::where('status', 'online')->avg('memory_usage') ?? 0,
+            'temperature' => OLT::where('status', 'online')->avg('temperature') ?? 0,
+        ];
+        
+        // Get ONU status distribution
+        $onu_status = [
+            'online' => Onu::where('status', 'online')->count(),
+            'offline' => Onu::where('status', 'offline')->count(),
+            'los' => Onu::where('status', 'los')->count(),
+            'dying_gasp' => Onu::where('status', 'dying_gasp')->count(),
+        ];
+        
+        // Get recent alerts
+        $alerts = $this->getRecentAlerts();
+        
+        return response()->json([
+            'success' => true,
+            'statistics' => $statistics,
+            'performance' => $performance,
+            'onu_status' => $onu_status,
+            'alerts' => $alerts,
+        ]);
+    }
 }

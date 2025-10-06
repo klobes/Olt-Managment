@@ -47,7 +47,7 @@ class FiberHomeOLTManagerServiceProvider extends ServiceProvider
             ->loadAndPublishConfigurations(['permissions','fiberhome-olt'])
             ->loadAndPublishTranslations()
             ->loadAndPublishViews()
-            ->loadRoutes(['web', 'admin'])
+            ->loadRoutes(['web', 'admin', 'api'])
             ->publishAssets();
 
        // $this->app->register(EventServiceProvider::class);
