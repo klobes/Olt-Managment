@@ -90,11 +90,13 @@
             const self = this;
 
             $.ajax({
-                url: `/admin/fiberhome-olt/devices/${oltId}`,
+                url: `/api/fiberhome-olt/devices/${oltId}`,
                 method: 'GET',
                 success: function(response) {
-                    self.populateEditForm(response.data);
-                    self.editModal.show();
+                    if (response.success) {
+                        self.populateEditForm(response.data);
+                        self.editModal.show();
+                    }
                 },
                 error: function(xhr) {
                     self.showError('Failed to load OLT data');
@@ -106,11 +108,13 @@
             const self = this;
 
             $.ajax({
-                url: `/admin/fiberhome-olt/devices/${oltId}`,
+                url: `/api/fiberhome-olt/devices/${oltId}`,
                 method: 'GET',
                 success: function(response) {
-                    self.populateDetailsModal(response.data);
-                    self.detailsModal.show();
+                    if (response.success) {
+                        self.populateDetailsModal(response.data);
+                        self.detailsModal.show();
+                    }
                 },
                 error: function(xhr) {
                     self.showError('Failed to load OLT details');

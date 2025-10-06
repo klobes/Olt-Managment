@@ -173,6 +173,58 @@ class OltDeviceController extends BaseController
      */
     public function getTable(Request $request)
     {
+        if ($request->ajax()) {
+            $devices = OltDevice::with(['onus'])->select('olt_devices.*');
+            
+            return datatables()
+                ->eloquent($devices)
+                ->addColumn('onu_count', function ($device) {
+                    return $device->onus()->count();
+                })
+                ->addColumn('status', function ($device) {
+                    $statusClass = [
+                        'online' => 'success',
+                        'offline' => 'danger',
+                        'error' => 'warning'
+                    ];
+                    $class = $statusClass[$device->status] ?? 'secondary';
+                    return '<span class="badge bg-' . $class . '">' . ucfirst($device->status) . '</span>';
+                })
+                ->addColumn('actions', function ($device) {
+                    return view('plugins/fiberhome-olt-manager::devices.partials.actions', compact('device'))->render();
+                })
+                ->rawColumns(['status', 'actions'])
+                ->make(true);
+        }
+        
         return app(OltDeviceTable::class)->render();
+    }
+    
+    /**
+     * Get OLT details as JSON
+     */
+    public function getDetails($id)
+    {
+        $device = OltDevice::with(['cards', 'ponPorts', 'onus'])->findOrFail($id);
+        
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id' => $device->id,
+                'name' => $device->name,
+                'ip_address' => $device->ip_address,
+                'model' => $device->model,
+                'vendor' => $device->vendor,
+                'status' => $device->status,
+                'location' => $device->location,
+                'description' => $device->description,
+                'snmp_community' => $device->snmp_community,
+                'snmp_version' => $device->snmp_version,
+                'snmp_port' => $device->snmp_port,
+                'onu_count' => $device->onus()->count(),
+                'uptime' => $device->uptime,
+                'last_sync' => $device->last_poll ? $device->last_poll->diffForHumans() : 'Never',
+            ]
+        ]);
     }
 }

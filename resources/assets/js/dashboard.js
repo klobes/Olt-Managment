@@ -163,13 +163,15 @@
             const self = this;
 
             $.ajax({
-                url: '/admin/fiberhome/dashboard/data',
+                url: '/api/fiberhome-olt/dashboard/data',
                 method: 'GET',
                 dataType: 'json',
                 success: function(response) {
-                    self.updateCharts(response);
-                    self.updateWidgets(response);
-                    self.updateAlerts(response.alerts);
+                    if (response.success) {
+                        self.updateCharts(response);
+                        self.updateWidgets(response);
+                        self.updateAlerts(response.alerts);
+                    }
                 },
                 error: function(xhr, status, error) {
                     console.error('Failed to refresh dashboard data:', error);

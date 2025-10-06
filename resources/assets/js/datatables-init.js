@@ -66,7 +66,7 @@
 
             $('#oltDevicesTable').DataTable($.extend({}, this.defaultOptions, {
                 ajax: {
-                    url: '/admin/fiberhome-olt/datatables/devices',
+                    url: '/api/fiberhome-olt/devices/datatable',
                     type: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -112,7 +112,7 @@
 
             $('#onuTable').DataTable($.extend({}, this.defaultOptions, {
                 ajax: {
-                    url: '/admin/fiberhome-olt/datatables/onus',
+                    url: '/api/fiberhome-olt/onus/datatable',
                     type: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -168,7 +168,7 @@
 
             $('#bandwidthProfilesTable').DataTable($.extend({}, this.defaultOptions, {
                 ajax: {
-                    url: '/admin/fiberhome-olt/datatables/bandwidth-profiles',
+                    url: '/api/fiberhome-olt/bandwidth-profiles/datatable',
                     type: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
