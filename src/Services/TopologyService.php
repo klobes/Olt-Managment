@@ -1,500 +1,564 @@
 <?php
 
-namespace Botble\FiberhomeOltManager\Services;
+namespace Botble\FiberHomeOLTManager\Services;
 
-use Botble\FiberhomeOltManager\Models\FiberCable;
-use Botble\FiberhomeOltManager\Models\JunctionBox;
-use Botble\FiberhomeOltManager\Models\Splitter;
-use Botble\FiberhomeOltManager\Models\SpliceCassette;
-use Botble\FiberhomeOltManager\Models\CableSegment;
-use Botble\FiberhomeOltManager\Models\FiberSplice;
-use Botble\FiberhomeOltManager\Models\SplitterConnection;
-use Botble\FiberhomeOltManager\Models\OltDevice;
-use Botble\FiberhomeOltManager\Models\Onu;
+use Botble\FiberHomeOLTManager\Models\OLT;
+use Botble\FiberHomeOLTManager\Models\ONU;
+use Botble\FiberHomeOLTManager\Models\FiberCable;
+use Botble\FiberHomeOLTManager\Models\JunctionBox;
+use Botble\FiberHomeOLTManager\Models\OltPort;
+use Botble\FiberHomeOLTManager\Models\OnuPort;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
 
 class TopologyService
 {
-    /**
-     * Create a new fiber cable
-     */
-    public function createFiberCable(array $data): FiberCable
+    protected $snmpService;
+    protected $oltService;
+
+    public function __construct(SNMPService $snmpService, OLTService $oltService)
     {
-        return FiberCable::create($data);
+        $this->snmpService = $snmpService;
+        $this->oltService = $oltService;
     }
 
     /**
-     * Create a new junction box
+     * Get complete network topology with drag/drop positions
      */
-    public function createJunctionBox(array $data): JunctionBox
+    public function getNetworkTopology(): array
     {
-        return JunctionBox::create($data);
+        return Cache::remember('fiberhome_topology', 300, function () {
+            $topology = [
+                'nodes' => $this->getNodes(),
+                'connections' => $this->getConnections(),
+                'cables' => $this->getCables(),
+                'junction_boxes' => $this->getJunctionBoxes(),
+            ];
+
+            return $this->applyDragDropPositions($topology);
+        });
     }
 
     /**
-     * Create a new splitter
+     * Get all network nodes (OLTs, ONUs, Junction Boxes)
      */
-    public function createSplitter(array $data): Splitter
+    protected function getNodes(): Collection
     {
-        return Splitter::create($data);
+        $nodes = collect();
+
+        // Add OLT nodes
+        $olts = OLT::with(['ports' => function ($query) {
+            $query->where('status', 'active');
+        }])->get();
+
+        foreach ($olts as $olt) {
+            $nodes->push([
+                'id' => 'olt_' . $olt->id,
+                'type' => 'olt',
+                'name' => $olt->name,
+                'model' => $olt->model,
+                'ip_address' => $olt->ip_address,
+                'status' => $olt->status,
+                'position' => $this->getNodePosition($olt->id, 'olt'),
+                'ports' => $olt->ports->map(function ($port) {
+                    return [
+                        'id' => $port->id,
+                        'name' => $port->name,
+                        'type' => $port->port_type,
+                        'status' => $port->status,
+                        'connected_to' => $port->connected_to,
+                    ];
+                }),
+                'icon' => $this->getNodeIcon('olt', $olt->status),
+                'color' => $this->getNodeColor('olt', $olt->status),
+                'draggable' => true,
+                'resizable' => false,
+            ]);
+        }
+
+        // Add ONU nodes
+        $onus = ONU::with(['olt', 'bandwidthProfile'])->get();
+
+        foreach ($onus as $onu) {
+            $nodes->push([
+                'id' => 'onu_' . $onu->id,
+                'type' => 'onu',
+                'name' => $onu->customer_name ?: $onu->serial_number,
+                'serial_number' => $onu->serial_number,
+                'olt_id' => $onu->olt_id,
+                'olt_name' => $onu->olt->name,
+                'status' => $onu->status,
+                'position' => $this->getNodePosition($onu->id, 'onu'),
+                'rx_power' => $onu->rx_power,
+                'tx_power' => $onu->tx_power,
+                'distance' => $onu->distance,
+                'bandwidth_profile' => $onu->bandwidthProfile ? [
+                    'name' => $onu->bandwidthProfile->name,
+                    'download_speed' => $onu->bandwidthProfile->download_speed,
+                    'upload_speed' => $onu->bandwidthProfile->upload_speed,
+                ] : null,
+                'icon' => $this->getNodeIcon('onu', $onu->status),
+                'color' => $this->getNodeColor('onu', $onu->status),
+                'draggable' => true,
+                'resizable' => false,
+            ]);
+        }
+
+        // Add Junction Box nodes
+        $junctionBoxes = JunctionBox::all();
+
+        foreach ($junctionBoxes as $jb) {
+            $nodes->push([
+                'id' => 'jb_' . $jb->id,
+                'type' => 'junction_box',
+                'name' => $jb->name,
+                'location' => $jb->location,
+                'capacity' => $jb->capacity,
+                'used_ports' => $jb->used_ports,
+                'available_ports' => $jb->capacity - $jb->used_ports,
+                'ports' => $this->getJunctionBoxPorts($jb),
+                'coordinates' => $jb->coordinates,
+                'position' => $this->getNodePosition($jb->id, 'junction_box'),
+                'icon' => $this->getNodeIcon('junction_box', 'active'),
+                'color' => $this->getNodeColor('junction_box', 'active'),
+                'draggable' => true,
+                'resizable' => true,
+            ]);
+        }
+
+        return $nodes;
     }
 
     /**
-     * Create a new splice cassette
+     * Get all network connections
      */
-    public function createSpliceCassette(array $data): SpliceCassette
+    protected function getConnections(): Collection
     {
-        return SpliceCassette::create($data);
+        $connections = collect();
+
+        // Get OLT to ONU connections
+        $onus = ONU::with(['olt'])->whereNotNull('olt_id')->get();
+
+        foreach ($onus as $onu) {
+            $connections->push([
+                'id' => 'conn_olt_' . $onu->olt_id . '_onu_' . $onu->id,
+                'from' => 'olt_' . $onu->olt_id,
+                'to' => 'onu_' . $onu->id,
+                'type' => 'olt_onu',
+                'status' => $onu->status,
+                'cable_info' => $this->getCableInfo($onu->olt_id, $onu->id),
+                'path' => $this->calculateCablePath($onu->olt_id, $onu->id),
+                'custom_name' => $this->getConnectionName($onu),
+                'editable' => true,
+                'deletable' => true,
+            ]);
+        }
+
+        // Get connections through junction boxes
+        $cables = FiberCable::with(['fromDevice', 'toDevice'])->get();
+
+        foreach ($cables as $cable) {
+            $connections->push([
+                'id' => 'conn_cable_' . $cable->id,
+                'from' => $this->getDeviceIdentifier($cable->from_device_type, $cable->from_device_id),
+                'to' => $this->getDeviceIdentifier($cable->to_device_type, $cable->to_device_id),
+                'type' => 'fiber_cable',
+                'status' => $cable->status,
+                'cable_info' => [
+                    'id' => $cable->id,
+                    'name' => $cable->name,
+                    'length' => $cable->length,
+                    'fiber_count' => $cable->fiber_count,
+                    'color' => $cable->color,
+                    'notes' => $cable->notes,
+                    'attenuation' => $this->calculateAttenuation($cable),
+                    'splicing_points' => $cable->splicing_points,
+                ],
+                'path' => $this->getCablePath($cable),
+                'custom_name' => $cable->name,
+                'editable' => true,
+                'deletable' => true,
+            ]);
+        }
+
+        return $connections;
     }
 
     /**
-     * Create a new cable segment
+     * Get fiber cables with detailed information
      */
-    public function createCableSegment(array $data): CableSegment
+    protected function getCables(): Collection
     {
-        return CableSegment::create($data);
-    }
-
-    /**
-     * Create a new fiber splice
-     */
-    public function createFiberSplice(array $data): FiberSplice
-    {
-        return FiberSplice::create($data);
-    }
-
-    /**
-     * Create a new splitter connection
-     */
-    public function createSplitterConnection(array $data): SplitterConnection
-    {
-        return SplitterConnection::create($data);
-    }
-
-    /**
-     * Get topology overview
-     */
-    public function getTopologyOverview(): array
-    {
-        return Cache::remember('topology_overview', 3600, function () {
+        return FiberCable::with(['fromDevice', 'toDevice'])->get()->map(function ($cable) {
             return [
-                'olt_devices' => OltDevice::where('is_active', true)->count(),
-                'fiber_cables' => FiberCable::where('status', 'active')->count(),
-                'junction_boxes' => JunctionBox::where('status', 'active')->count(),
-                'splitters' => Splitter::where('status', 'active')->count(),
-                'splice_cassettes' => SpliceCassette::where('status', 'active')->count(),
-                'cable_segments' => CableSegment::where('status', 'active')->count(),
-                'total_fiber_length' => $this->getTotalFiberLength(),
-                'total_splitter_ports' => $this->getTotalSplitterPorts(),
-                'utilization_stats' => $this->getUtilizationStats(),
+                'id' => $cable->id,
+                'name' => $cable->name,
+                'length' => $cable->length,
+                'fiber_count' => $cable->fiber_count,
+                'color' => $cable->color,
+                'status' => $cable->status,
+                'from_device' => [
+                    'type' => $cable->from_device_type,
+                    'id' => $cable->from_device_id,
+                    'name' => $this->getDeviceName($cable->from_device_type, $cable->from_device_id),
+                    'port' => $cable->from_port,
+                ],
+                'to_device' => [
+                    'type' => $cable->to_device_type,
+                    'id' => $cable->to_device_id,
+                    'name' => $this->getDeviceName($cable->to_device_type, $cable->to_device_id),
+                    'port' => $cable->to_port,
+                ],
+                'attenuation' => $this->calculateAttenuation($cable),
+                'splicing_points' => $cable->splicing_points,
+                'notes' => $cable->notes,
+                'coordinates' => $cable->coordinates,
+                'waypoints' => $cable->waypoints,
             ];
         });
     }
 
     /**
-     * Get equipment utilization statistics
+     * Get junction boxes with port information
      */
-    private function getUtilizationStats(): array
+    protected function getJunctionBoxes(): Collection
     {
+        return JunctionBox::all()->map(function ($jb) {
+            return [
+                'id' => $jb->id,
+                'name' => $jb->name,
+                'location' => $jb->location,
+                'capacity' => $jb->capacity,
+                'used_ports' => $jb->used_ports,
+                'available_ports' => $jb->capacity - $jb->used_ports,
+                'ports' => $this->getJunctionBoxPorts($jb),
+                'coordinates' => $jb->coordinates,
+                'notes' => $jb->notes,
+            ];
+        });
+    }
+
+    /**
+     * Update node position for drag/drop functionality
+     */
+    public function updateNodePosition(string $nodeType, int $nodeId, array $position): bool
+    {
+        $cacheKey = "fiberhome_node_position_{$nodeType}_{$nodeId}";
+        
+        Cache::put($cacheKey, [
+            'x' => $position['x'] ?? 0,
+            'y' => $position['y'] ?? 0,
+            'updated_at' => now(),
+        ], 86400); // 24 hours
+
+        return true;
+    }
+
+    /**
+     * Create a new fiber cable connection
+     */
+    public function createCableConnection(array $data): FiberCable
+    {
+        $cable = FiberCable::create([
+            'name' => $data['name'],
+            'from_device_type' => $data['from_device_type'],
+            'from_device_id' => $data['from_device_id'],
+            'from_port' => $data['from_port'] ?? null,
+            'to_device_type' => $data['to_device_type'],
+            'to_device_id' => $data['to_device_id'],
+            'to_port' => $data['to_port'] ?? null,
+            'length' => $data['length'] ?? 0,
+            'fiber_count' => $data['fiber_count'] ?? 1,
+            'color' => $data['color'] ?? 'yellow',
+            'status' => $data['status'] ?? 'active',
+            'splicing_points' => $data['splicing_points'] ?? [],
+            'coordinates' => $data['coordinates'] ?? [],
+            'waypoints' => $data['waypoints'] ?? [],
+            'notes' => $data['notes'] ?? '',
+        ]);
+
+        // Clear topology cache
+        Cache::forget('fiberhome_topology');
+
+        return $cable;
+    }
+
+    /**
+     * Update cable connection
+     */
+    public function updateCableConnection(int $cableId, array $data): bool
+    {
+        $cable = FiberCable::findOrFail($cableId);
+        $cable->update($data);
+
+        // Clear topology cache
+        Cache::forget('fiberhome_topology');
+
+        return true;
+    }
+
+    /**
+     * Delete cable connection
+     */
+    public function deleteCableConnection(int $cableId): bool
+    {
+        $cable = FiberCable::findOrFail($cableId);
+        $cable->delete();
+
+        // Clear topology cache
+        Cache::forget('fiberhome_topology');
+
+        return true;
+    }
+
+    /**
+     * Get node position from cache or generate default
+     */
+    protected function getNodePosition(int $nodeId, string $nodeType): array
+    {
+        $cacheKey = "fiberhome_node_position_{$nodeType}_{$nodeId}";
+        $position = Cache::get($cacheKey);
+
+        if (!$position) {
+            // Generate default position based on node type and ID
+            $position = $this->generateDefaultPosition($nodeId, $nodeType);
+            Cache::put($cacheKey, $position, 86400);
+        }
+
+        return $position;
+    }
+
+    /**
+     * Generate default position for nodes
+     */
+    protected function generateDefaultPosition(int $nodeId, string $nodeType): array
+    {
+        $basePositions = [
+            'olt' => ['x' => 100, 'y' => 100],
+            'onu' => ['x' => 300, 'y' => 200],
+            'junction_box' => ['x' => 200, 'y' => 150],
+        ];
+
+        $base = $basePositions[$nodeType] ?? ['x' => 150, 'y' => 150];
+        
+        // Add some randomness to avoid overlap
+        $base['x'] += ($nodeId % 10) * 50;
+        $base['y'] += ($nodeId % 5) * 40;
+
+        return $base;
+    }
+
+    /**
+     * Get node icon based on type and status
+     */
+    protected function getNodeIcon(string $type, string $status): string
+    {
+        $icons = [
+            'olt' => $status === 'online' ? 'fa-server text-success' : 'fa-server text-danger',
+            'onu' => match($status) {
+                'online' => 'fa-wifi text-success',
+                'offline' => 'fa-wifi text-danger',
+                'dying_gasp' => 'fa-wifi text-warning',
+                default => 'fa-wifi text-secondary',
+            },
+            'junction_box' => 'fa-square text-primary',
+        ];
+
+        return $icons[$type] ?? 'fa-circle text-secondary';
+    }
+
+    /**
+     * Get node color based on type and status
+     */
+    protected function getNodeColor(string $type, string $status): string
+    {
+        $colors = [
+            'olt' => $status === 'online' ? '#28a745' : '#dc3545',
+            'onu' => match($status) {
+                'online' => '#28a745',
+                'offline' => '#dc3545',
+                'dying_gasp' => '#ffc107',
+                default => '#6c757d',
+            },
+            'junction_box' => '#007bff',
+        ];
+
+        return $colors[$type] ?? '#6c757d';
+    }
+
+    /**
+     * Get junction box ports with connection info
+     */
+    protected function getJunctionBoxPorts($junctionBox): array
+    {
+        return collect(range(1, $junctionBox->capacity))->map(function ($portNumber) use ($junctionBox) {
+            $connection = $this->getPortConnection($junctionBox->id, $portNumber);
+            
+            return [
+                'port_number' => $portNumber,
+                'status' => $connection ? 'connected' : 'available',
+                'connected_to' => $connection ? $connection['device_name'] : null,
+                'connection_type' => $connection ? $connection['type'] : null,
+                'cable_info' => $connection ? $connection['cable_info'] : null,
+                'custom_name' => "Port {$portNumber}",
+                'editable' => true,
+            ];
+        })->toArray();
+    }
+
+    /**
+     * Get connection info for a specific port
+     */
+    protected function getPortConnection(int $junctionBoxId, int $portNumber): ?array
+    {
+        $cable = FiberCable::where(function ($query) use ($junctionBoxId, $portNumber) {
+            $query->where('from_device_type', 'junction_box')
+                  ->where('from_device_id', $junctionBoxId)
+                  ->where('from_port', $portNumber);
+        })->orWhere(function ($query) use ($junctionBoxId, $portNumber) {
+            $query->where('to_device_type', 'junction_box')
+                  ->where('to_device_id', $junctionBoxId)
+                  ->where('to_port', $portNumber);
+        })->first();
+
+        if (!$cable) {
+            return null;
+        }
+
+        $deviceType = $cable->from_device_type === 'junction_box' ? $cable->to_device_type : $cable->from_device_type;
+        $deviceId = $cable->from_device_type === 'junction_box' ? $cable->to_device_id : $cable->from_device_id;
+
         return [
-            'junction_boxes' => [
-                'total' => JunctionBox::where('status', 'active')->count(),
-                'full' => JunctionBox::where('status', 'active')
-                    ->whereRaw('used_capacity >= capacity')
-                    ->count(),
-                'average_utilization' => JunctionBox::where('status', 'active')
-                    ->avg('used_capacity / capacity * 100'),
-            ],
-            'splitters' => [
-                'total' => Splitter::where('status', 'active')->count(),
-                'full' => Splitter::where('status', 'active')
-                    ->whereRaw('used_output_ports >= output_ports')
-                    ->count(),
-                'average_utilization' => Splitter::where('status', 'active')
-                    ->avg('used_output_ports / output_ports * 100'),
-            ],
-            'splice_cassettes' => [
-                'total' => SpliceCassette::where('status', 'active')->count(),
-                'full' => SpliceCassette::where('status', 'active')
-                    ->whereRaw('used_capacity >= capacity')
-                    ->count(),
-                'average_utilization' => SpliceCassette::where('status', 'active')
-                    ->avg('used_capacity / capacity * 100'),
+            'type' => $deviceType,
+            'device_name' => $this->getDeviceName($deviceType, $deviceId),
+            'cable_info' => [
+                'id' => $cable->id,
+                'name' => $cable->name,
+                'status' => $cable->status,
             ],
         ];
     }
 
     /**
-     * Get total fiber length
+     * Get device name by type and ID
      */
-    private function getTotalFiberLength(): float
+    protected function getDeviceName(string $type, int $id): string
     {
-        return FiberCable::where('status', 'active')->sum('length');
+        return match ($type) {
+            'olt' => OLT::find($id)?->name ?? "OLT {$id}",
+            'onu' => ONU::find($id)?->customer_name ?? ONU::find($id)?->serial_number ?? "ONU {$id}",
+            'junction_box' => JunctionBox::find($id)?->name ?? "JB {$id}",
+            default => "Device {$id}",
+        };
     }
 
     /**
-     * Get total splitter ports
+     * Get device identifier
      */
-    private function getTotalSplitterPorts(): int
+    protected function getDeviceIdentifier(string $type, int $id): string
     {
-        return Splitter::where('status', 'active')->sum('output_ports');
+        return "{$type}_{$id}";
     }
 
     /**
-     * Find available equipment near location
+     * Calculate cable attenuation
      */
-    public function findAvailableEquipment(float $latitude, float $longitude, float $radius = 1.0): array
+    protected function calculateAttenuation(FiberCable $cable): float
     {
-        // Convert radius from km to degrees (approximately)
-        $latRadius = $radius / 111.0; // 1 degree latitude ≈ 111 km
-        $lonRadius = $radius / (111.0 * cos(deg2rad($latitude)));
+        // Typical attenuation: 0.35 dB/km for single mode fiber
+        $attenuationPerKm = 0.35;
+        $spliceLoss = 0.1; // dB per splice
+        $connectorLoss = 0.3; // dB per connector
 
-        return [
-            'junction_boxes' => JunctionBox::where('status', 'active')
-                ->whereBetween('latitude', [$latitude - $latRadius, $latitude + $latRadius])
-                ->whereBetween('longitude', [$longitude - $lonRadius, $longitude + $lonRadius])
-                ->whereRaw('used_capacity < capacity')
-                ->get(),
+        $fiberLoss = ($cable->length / 1000) * $attenuationPerKm;
+        $spliceLossTotal = ($cable->splicing_points ?? 0) * $spliceLoss;
+        $connectorLossTotal = 2 * $connectorLoss; // Assuming 2 connectors
 
-            'splitters' => Splitter::where('status', 'active')
-                ->whereBetween('latitude', [$latitude - $latRadius, $latitude + $latRadius])
-                ->whereBetween('longitude', [$longitude - $lonRadius, $longitude + $lonRadius])
-                ->whereRaw('used_output_ports < output_ports')
-                ->get(),
-        ];
+        return round($fiberLoss + $spliceLossTotal + $connectorLossTotal, 2);
     }
 
     /**
-     * Get equipment recommendations for new connection
+     * Get cable info for OLT-ONU connection
      */
-    public function getEquipmentRecommendations(float $latitude, float $longitude): array
+    protected function getCableInfo(int $oltId, int $onuId): array
     {
-        $availableEquipment = $this->findAvailableEquipment($latitude, $longitude);
-
-        $recommendations = [];
-
-        if ($availableEquipment['junction_boxes']->isEmpty()) {
-            $recommendations[] = [
-                'type' => 'junction_box',
-                'priority' => 'high',
-                'description' => 'No available junction boxes nearby. Consider installing new junction box.',
-                'suggested_location' => [
-                    'latitude' => $latitude,
-                    'longitude' => $longitude,
-                ],
-            ];
-        }
-
-        if ($availableEquipment['splitters']->isEmpty()) {
-            $recommendations[] = [
-                'type' => 'splitter',
-                'priority' => 'medium',
-                'description' => 'No available splitters nearby. Consider installing new splitter.',
-                'suggested_location' => [
-                    'latitude' => $latitude,
-                    'longitude' => $longitude,
-                ],
-            ];
-        }
-
-        // Recommend optimal equipment from available ones
-        foreach ($availableEquipment['junction_boxes'] as $jb) {
-            $utilization = $jb->used_capacity / $jb->capacity * 100;
-            if ($utilization < 50) {
-                $recommendations[] = [
-                    'type' => 'junction_box',
-                    'priority' => 'low',
-                    'description' => "Junction box {$jb->box_code} has good capacity ({$utilization}% used)",
-                    'equipment' => $jb,
-                ];
-            }
-        }
-
-        foreach ($availableEquipment['splitters'] as $splitter) {
-            $utilization = $splitter->used_output_ports / $splitter->output_ports * 100;
-            if ($utilization < 50) {
-                $recommendations[] = [
-                    'type' => 'splitter',
-                    'priority' => 'low',
-                    'description' => "Splitter {$splitter->splitter_code} has good capacity ({$utilization}% used)",
-                    'equipment' => $splitter,
-                ];
-            }
-        }
-
-        return $recommendations;
-    }
-
-    /**
-     * Validate topology consistency
-     */
-    public function validateTopology(): array
-    {
-        $errors = [];
-
-        // Check for orphaned cable segments
-        $orphanedSegments = CableSegment::where(function ($query) {
-            $query->whereNull('source_cable_segment_id')
-                ->where('source_type', '!=', 'OltDevice');
-        })->orWhere(function ($query) {
-            $query->whereNull('destination_cable_segment_id')
-                ->where('destination_type', '!=', 'Onu');
+        // Find cables connecting OLT to ONU (possibly through junction boxes)
+        $cables = FiberCable::where(function ($query) use ($oltId, $onuId) {
+            $query->where('from_device_type', 'olt')
+                  ->where('from_device_id', $oltId);
+        })->orWhere(function ($query) use ($oltId, $onuId) {
+            $query->where('to_device_type', 'onu')
+                  ->where('to_device_id', $onuId);
         })->get();
 
-        if ($orphanedSegments->isNotEmpty()) {
-            $errors[] = [
-                'type' => 'orphaned_segments',
-                'description' => 'Found ' . $orphanedSegments->count() . ' orphaned cable segments',
-                'severity' => 'warning',
+        return $cables->map(function ($cable) {
+            return [
+                'id' => $cable->id,
+                'name' => $cable->name,
+                'length' => $cable->length,
+                'status' => $cable->status,
             ];
-        }
-
-        // Check for capacity violations
-        $overCapacityJunctionBoxes = JunctionBox::where('status', 'active')
-            ->whereRaw('used_capacity >= capacity')
-            ->get();
-
-        if ($overCapacityJunctionBoxes->isNotEmpty()) {
-            $errors[] = [
-                'type' => 'capacity_violation',
-                'description' => 'Found ' . $overCapacityJunctionBoxes->count() . ' junction boxes over capacity',
-                'severity' => 'error',
-            ];
-        }
-
-        // Check for splitter capacity violations
-        $overCapacitySplitters = Splitter::where('status', 'active')
-            ->whereRaw('used_output_ports >= output_ports')
-            ->get();
-
-        if ($overCapacitySplitters->isNotEmpty()) {
-            $errors[] = [
-                'type' => 'capacity_violation',
-                'description' => 'Found ' . $overCapacitySplitters->count() . ' splitters over capacity',
-                'severity' => 'error',
-            ];
-        }
-
-        return $errors;
+        })->toArray();
     }
 
     /**
-     * Generate topology report
+     * Calculate cable path for visualization
      */
-    public function generateTopologyReport(array $filters = []): array
+    protected function calculateCablePath(int $oltId, int $onuId): array
     {
-        $report = [];
-
-        $report['overview'] = $this->getTopologyOverview();
-        $report['equipment_breakdown'] = $this->getEquipmentBreakdown();
-        $report['utilization_analysis'] = $this->getUtilizationAnalysis();
-        $report['geographic_distribution'] = $this->getGeographicDistribution();
-        $report['validation_errors'] = $this->validateTopology();
-        $report['recommendations'] = $this->generateRecommendations();
-
-        return $report;
-    }
-
-    /**
-     * Get equipment breakdown by type
-     */
-    private function getEquipmentBreakdown(): array
-    {
+        // Simple straight line path - can be enhanced with routing algorithms
         return [
-            'fiber_cables' => [
-                'by_type' => FiberCable::where('status', 'active')
-                    ->selectRaw('cable_type, COUNT(*) as count')
-                    ->groupBy('cable_type')
-                    ->pluck('count', 'cable_type')
-                    ->toArray(),
-                'by_fiber_count' => FiberCable::where('status', 'active')
-                    ->selectRaw('fiber_count, COUNT(*) as count')
-                    ->groupBy('fiber_count')
-                    ->pluck('count', 'fiber_count')
-                    ->toArray(),
-            ],
-            'junction_boxes' => [
-                'by_type' => JunctionBox::where('status', 'active')
-                    ->selectRaw('box_type, COUNT(*) as count')
-                    ->groupBy('box_type')
-                    ->pluck('count', 'box_type')
-                    ->toArray(),
-            ],
-            'splitters' => [
-                'by_type' => Splitter::where('status', 'active')
-                    ->selectRaw('splitter_type, COUNT(*) as count')
-                    ->groupBy('splitter_type')
-                    ->pluck('count', 'splitter_type')
-                    ->toArray(),
-            ],
+            'type' => 'straight',
+            'coordinates' => [], // Will be calculated on frontend
+            'waypoints' => [],
         ];
     }
 
     /**
-     * Get utilization analysis
+     * Get cable path for existing cable
      */
-    private function getUtilizationAnalysis(): array
+    protected function getCablePath(FiberCable $cable): array
     {
         return [
-            'junction_boxes' => $this->analyzeJunctionBoxUtilization(),
-            'splitters' => $this->analyzeSplitterUtilization(),
-            'splice_cassettes' => $this->analyzeSpliceCassetteUtilization(),
+            'type' => 'custom',
+            'coordinates' => $cable->path_coordinates ?? [],
+            'waypoints' => $cable->waypoints ?? [],
         ];
     }
 
     /**
-     * Analyze junction box utilization
+     * Get connection name
      */
-    private function analyzeJunctionBoxUtilization(): array
+    protected function getConnectionName(ONU $onu): string
     {
-        $junctionBoxes = JunctionBox::where('status', 'active')->get();
-        
-        $utilization = $junctionBoxes->map(function ($jb) {
-            return $jb->used_capacity / $jb->capacity * 100;
-        });
-        
-        return [
-            'average_utilization' => round($utilization->avg(), 2),
-            'min_utilization' => round($utilization->min(), 2),
-            'max_utilization' => round($utilization->max(), 2),
-            'over_capacity' => $junctionBoxes->where('used_capacity', '>=', 'capacity')->count(),
-            'under_utilized' => $junctionBoxes->where('used_capacity', '<', $jb->capacity * 0.5)->count(),
-        ];
+        return "{$onu->olt->name} → {$onu->customer_name}";
     }
 
     /**
-     * Analyze splitter utilization
+     * Apply drag/drop positions to topology
      */
-    private function analyzeSplitterUtilization(): array
+    protected function applyDragDropPositions(array $topology): array
     {
-        $splitters = Splitter::where('status', 'active')->get();
-        
-        $utilization = $splitters->map(function ($splitter) {
-            return $splitter->used_output_ports / $splitter->output_ports * 100;
-        });
-        
-        return [
-            'average_utilization' => round($utilization->avg(), 2),
-            'min_utilization' => round($utilization->min(), 2),
-            'max_utilization' => round($utilization->max(), 2),
-            'over_capacity' => $splitters->where('used_output_ports', '>=', 'output_ports')->count(),
-            'under_utilized' => $splitters->where('used_output_ports', '<', $splitter->output_ports * 0.5)->count(),
-        ];
-    }
-
-    /**
-     * Analyze splice cassette utilization
-     */
-    private function analyzeSpliceCassetteUtilization(): array
-    {
-        $cassettes = SpliceCassette::where('status', 'active')->get();
-        
-        $utilization = $cassettes->map(function ($cassette) {
-            return $cassette->used_capacity / $cassette->capacity * 100;
-        });
-        
-        return [
-            'average_utilization' => round($utilization->avg(), 2),
-            'min_utilization' => round($utilization->min(), 2),
-            'max_utilization' => round($utilization->max(), 2),
-            'over_capacity' => $cassettes->where('used_capacity', '>=', 'capacity')->count(),
-            'under_utilized' => $cassettes->where('used_capacity', '<', $cassette->capacity * 0.5)->count(),
-        ];
-    }
-
-    /**
-     * Get geographic distribution
-     */
-    private function getGeographicDistribution(): array
-    {
-        $junctionBoxes = JunctionBox::where('status', 'active')
-            ->selectRaw('COUNT(*) as count, latitude, longitude')
-            ->groupBy('latitude', 'longitude')
-            ->get();
-        
-        $splitters = Splitter::where('status', 'active')
-            ->selectRaw('COUNT(*) as count, latitude, longitude')
-            ->groupBy('latitude', 'longitude')
-            ->get();
-        
-        return [
-            'junction_boxes' => $junctionBoxes->toArray(),
-            'splitters' => $splitters->toArray(),
-            'coverage_area' => $this->calculateCoverageArea($junctionBoxes),
-        ];
-    }
-
-    /**
-     * Calculate coverage area
-     */
-    private function calculateCoverageArea($locations): array
-    {
-        if ($locations->isEmpty()) {
-            return ['min_lat' => null, 'max_lat' => null, 'min_lon' => null, 'max_lon' => null];
+        foreach ($topology['nodes'] as &$node) {
+            $position = $this->getNodePosition(
+                intval(str_replace(['olt_', 'onu_', 'jb_'], '', $node['id'])), 
+                $node['type']
+            );
+            
+            $node['position'] = $position;
+            $node['draggable'] = true;
+            $node['resizable'] = $node['type'] === 'junction_box';
         }
-        
-        return [
-            'min_lat' => $locations->min('latitude'),
-            'max_lat' => $locations->max('latitude'),
-            'min_lon' => $locations->min('longitude'),
-            'max_lon' => $locations->max('longitude'),
-        ];
+
+        return $topology;
     }
 
     /**
-     * Generate recommendations
+     * Clear topology cache
      */
-    private function generateRecommendations(): array
+    public function clearCache(): void
     {
-        $recommendations = [];
-        
-        $stats = $this->getTopologyOverview();
-        
-        // Check for capacity issues
-        if ($stats['junction_boxes']['full'] > 0) {
-            $recommendations[] = [
-                'type' => 'capacity',
-                'priority' => 'high',
-                'description' => 'Found ' . $stats['junction_boxes']['full'] . ' junction boxes at full capacity. Consider adding new junction boxes.',
-            ];
-        }
-        
-        if ($stats['splitters']['full'] > 0) {
-            $recommendations[] = [
-                'type' => 'capacity',
-                'priority' => 'high',
-                'description' => 'Found ' . $stats['splitters']['full'] . ' splitters at full capacity. Consider adding new splitters.',
-            ];
-        }
-        
-        // Check for under-utilized equipment
-        if ($stats['junction_boxes']['average_utilization'] < 30) {
-            $recommendations[] = [
-                'type' => 'optimization',
-                'priority' => 'low',
-                'description' => 'Junction boxes are under-utilized on average. Consider optimizing placement.',
-            ];
-        }
-        
-        // Check for maintenance needs
-        $upcomingMaintenance = $this->getUpcomingMaintenance(90);
-        if (count($upcomingMaintenance) > 5) {
-            $recommendations[] = [
-                'type' => 'maintenance',
-                'priority' => 'medium',
-                'description' => 'Found ' . count($upcomingMaintenance) . ' upcoming maintenance tasks. Consider scheduling.',
-            ];
-        }
-        
-        return $recommendations;
-    }
-
-    /**
-     * Get upcoming maintenance
-     */
-    private function getUpcomingMaintenance(int $days): array
-    {
-        return app(MaintenanceService::class)->getUpcomingMaintenance($days);
+        Cache::forget('fiberhome_topology');
+        Cache::forget('fiberhome_node_positions');
     }
 }

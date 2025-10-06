@@ -4,7 +4,7 @@ namespace Botble\FiberHomeOLTManager\Http\Controllers;
 
 use Botble\Base\Http\Controllers\BaseController;
 use Botble\FiberHomeOLTManager\Models\OLT;
-use Botble\FiberHomeOLTManager\Models\ONU;
+use Botble\FiberHomeOLTManager\Models\Onu;
 use Botble\FiberHomeOLTManager\Models\BandwidthProfile;
 use Botble\FiberHomeOLTManager\Services\PerformanceMetricsService;
 use Illuminate\Http\Request;
@@ -26,8 +26,8 @@ class DashboardController extends BaseController
         $stats = [
             'total_olts' => OLT::count(),
             'online_olts' => OLT::where('status', 'online')->count(),
-            'total_onus' => ONU::count(),
-            'online_onus' => ONU::where('status', 'online')->count(),
+            'total_onus' => Onu::count(),
+            'online_onus' => Onu::where('status', 'online')->count(),
             'total_profiles' => BandwidthProfile::count(),
             'active_profiles' => BandwidthProfile::where('status', 'active')->count(),
         ];
@@ -72,7 +72,7 @@ class DashboardController extends BaseController
         }
 
         // Check ONU status alerts
-        $offlineOnus = ONU::where('status', 'offline')
+        $offlineOnus = Onu::where('status', 'offline')
             ->where('last_seen', '<', now()->subMinutes(30))
             ->take(5)
             ->get();

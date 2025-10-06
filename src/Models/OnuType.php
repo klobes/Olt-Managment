@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class OnuType extends BaseModel
 {
-    protected $table = 'onu_types';
+    protected $table = 'om_onu_types';
 
     protected $fillable = [
         'vendor',

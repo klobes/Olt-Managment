@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class BandwidthProfile extends BaseModel
 {
-    protected $table = 'bandwidth_profiles';
+    protected $table = 'om_bandwidth_profiles';
 
     protected $fillable = [
         'olt_device_id',
@@ -18,6 +18,7 @@ class BandwidthProfile extends BaseModel
         'down_min_rate',
         'down_max_rate',
         'fixed_rate',
+		'status',
     ];
 
     protected $casts = [
@@ -28,6 +29,10 @@ class BandwidthProfile extends BaseModel
         'down_max_rate' => 'integer',
         'fixed_rate' => 'integer',
     ];
+	 public function onus()
+    {
+        return $this->belongsTo(Onu::class);
+    }
 
     public function oltDevice(): BelongsTo
     {

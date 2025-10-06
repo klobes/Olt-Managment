@@ -8,10 +8,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Onu extends BaseModel
 {
-    protected $table = 'onus';
+    protected $table = 'om_onus';
 
     protected $fillable = [
-        'olt_device_id',
+        'olt_id',
+        'bandwidth_profile_id',
         'olt_pon_port_id',
         'onu_index',
         'onu_name',
@@ -31,6 +32,8 @@ class Onu extends BaseModel
         'optical_temperature',
         'last_online',
         'last_offline',
+        'last_seen',
+		
     ];
 
     protected $casts = [
@@ -46,6 +49,20 @@ class Onu extends BaseModel
         'last_online' => 'datetime',
         'last_offline' => 'datetime',
     ];
+	 public function olt()
+    {
+        return $this->belongsTo(OLT::class, 'olt_id');
+    }
+    
+//    public function oltDevice()
+//    {
+//        return $this->belongsTo(OltDevice::class);
+//    }
+    
+    public function bandwidthProfile()
+    {
+        return $this->belongsTo(BandwidthProfile::class, 'bandwidth_profile_id');
+    }
 
     public function oltDevice(): BelongsTo
     {

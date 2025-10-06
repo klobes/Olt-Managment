@@ -6,8 +6,9 @@ use Botble\FiberHomeOLTManager\Http\Controllers\ONUController;
 use Botble\FiberHomeOLTManager\Http\Controllers\BandwidthProfileController;
 use Botble\FiberHomeOLTManager\Http\Controllers\SettingsController;
 use Botble\FiberHomeOLTManager\Http\Controllers\DashboardController;
+use Botble\FiberHomeOLTManager\Http\Controllers\TopologyController;
 
-Route::group(['prefix' => 'fiberhome', 'as' => 'fiberhome.'], function () {
+	Route::group(['prefix' => 'fiberhome', 'as' => 'fiberhome.','middleware' => ['web', 'core']], function () {
     
     // Dashboard
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
@@ -60,5 +61,23 @@ Route::group(['prefix' => 'fiberhome', 'as' => 'fiberhome.'], function () {
     });
     
     // Topology
-    Route::get('/topology', [DashboardController::class, 'topology'])->name('topology');
+   //Route::get('/topology', [DashboardController::class, 'topology'])->name('topology');
+	// Topology Management (v2.0.0)
+        Route::group(['prefix' => 'topology', 'as' => 'topology.'], function () {
+            Route::get('/', [TopologyController::class, 'index'])->name('index');
+            Route::get('trace/{onu}', [TopologyController::class, 'tracePath'])->name('trace-path');
+            Route::get('junction-box/{junctionBox}', [TopologyController::class, 'getJunctionBoxDetails'])->name('junction-box-details');
+            Route::get('splitter/{splitter}/available-ports', [TopologyController::class, 'getAvailablePorts'])->name('splitter-available-ports');
+            Route::post('calculate-budget', [TopologyController::class, 'calculateOpticalBudget'])->name('calculate-budget');
+            Route::post('find-path', [TopologyController::class, 'findOptimalPath'])->name('find-optimal-path');
+			Route::get('/', [DashboardController::class, 'topology'])->name('index');
+			Route::get('/data', [TopologyController::class, 'data'])->name('data');
+			Route::post('/update-position', [TopologyController::class, 'updatePosition'])->name('update-position');
+			Route::get('/devices', [TopologyController::class, 'devices'])->name('devices');
+			Route::get('/cable', [TopologyController::class, 'cable'])->name('cable');
+			Route::post('/cable', [TopologyController::class, 'updateCable'])->name('update-cable');
+
+	   });
+	//Route::post('/topology/update', [DashboardController::class, 'update'])->name('topology.update');
+
 });

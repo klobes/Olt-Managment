@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class OltPonPort extends BaseModel
 {
-    protected $table = 'olt_pon_ports';
+    protected $table = 'om_olt_pon_ports';
 
     protected $fillable = [
         'olt_device_id',

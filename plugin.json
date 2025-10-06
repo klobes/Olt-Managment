@@ -1,39 +1,10 @@
 {
-    "id": "fiberhome-olt-manager",
-    "name": "FiberHome OLT Manager",
-    "description": "SNMP-based management system for FiberHome OLT devices with admin panel integration",
-    "author": "NinjaTech AI",
-    "url": "https://ninjatech.ai",
+    "name": "OLT Management",
+    "namespace": "Botble\\FiberHomeOLTManager\\",
+    "provider": "Botble\\FiberHomeOLTManager\\Providers\\FiberHomeOLTManagerServiceProvider",
+    "author": "Your Name",
+    "url": "https://github.com/yourusername/botble-olt-management",
     "version": "1.0.0",
-    "options": [
-        {
-            "id": "fiberhome_enabled",
-            "label": "Enable FiberHome OLT Manager",
-            "type": "onOff",
-            "value": true
-        },
-        {
-            "id": "fiberhome_menu_position",
-            "label": "Menu Position",
-            "type": "select",
-            "value": "main",
-            "options": [
-                {"value": "main", "label": "Main Menu"},
-                {"value": "tools", "label": "Tools Menu"},
-                {"value": "network", "label": "Network Menu"}
-            ]
-        },
-        {
-            "id": "fiberhome_auto_polling",
-            "label": "Enable Auto Polling",
-            "type": "onOff",
-            "value": true
-        },
-        {
-            "id": "fiberhome_alert_notifications",
-            "label": "Enable Alert Notifications",
-            "type": "onOff",
-            "value": true
-        }
-    ]
+    "description": "Complete OLT and ONU device management system with SNMP monitoring and Supabase integration",
+    "minimum_core_version": "7.0.0"
 }

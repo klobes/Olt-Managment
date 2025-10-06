@@ -1,8 +1,8 @@
 <?php
 
-namespace Botble\FiberhomeOltManager\Services;
+namespace Botble\FiberHomeOLTManager\Services;
 
-use Botble\FiberhomeOltManager\Models\OltDevice;
+use Botble\FiberHomeOLTManager\Models\OltDevice;
 use Exception;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -13,7 +13,7 @@ class SnmpManager
 
     public function __construct()
     {
-        $this->config = config('plugins.fiberhome-olt.fiberhome-olt');
+        $this->config = config('plugins.fiberhome-olt-manager.fiberhome-olt');
     }
 
     /**

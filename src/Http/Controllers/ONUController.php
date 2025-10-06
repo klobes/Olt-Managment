@@ -4,13 +4,13 @@ namespace Botble\FiberHomeOLTManager\Http\Controllers;
 
 use Botble\Base\Http\Controllers\BaseController;
 use Botble\Base\Http\Responses\BaseHttpResponse;
-use Botble\FiberHomeOLTManager\Models\ONU;
+use Botble\FiberHomeOLTManager\Models\Onu;
 use Botble\FiberHomeOLTManager\Models\OLT;
 use Botble\FiberHomeOLTManager\Http\Requests\ONURequest;
 use Botble\FiberHomeOLTManager\Services\ONUService;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
-
+use Botble\FiberHomeOLTManager\Models\BandwidthProfile;
 class ONUController extends BaseController
 {
     protected $onuService;
@@ -25,14 +25,14 @@ class ONUController extends BaseController
         page_title()->setTitle(trans('plugins/fiberhome-olt-manager::onu.title'));
         
         $olts = OLT::where('status', 'online')->get();
-        $bandwidthProfiles = \Botble\FiberHomeOLTManager\Models\BandwidthProfile::where('status', 'active')->get();
+        $bandwidthProfiles = BandwidthProfile::where('status', 'active')->get();
         
-        return view('plugins.fiberhome-olt-manager::onu.index', compact('olts', 'bandwidthProfiles'));
+        return view('plugins/fiberhome-olt-manager::onu.index', compact('olts', 'bandwidthProfiles'));
     }
 
     public function datatable(Request $request)
     {
-        $query = ONU::query()
+        $query = Onu::query()
             ->select([
                 'onus.id', 'onus.serial_number', 'onus.olt_id', 'onus.slot', 'onus.port', 
                 'onus.onu_id', 'onus.status', 'onus.rx_power', 'onus.tx_power', 
@@ -83,7 +83,7 @@ class ONUController extends BaseController
 
     public function available(Request $request)
     {
-        $onus = ONU::select(['id', 'serial_number', 'olt_id', 'slot', 'port', 'customer_name'])
+        $onus = Onu::select(['id', 'serial_number', 'olt_id', 'slot', 'port', 'customer_name'])
             ->with(['olt' => function ($query) {
                 $query->select(['id', 'name']);
             }])
@@ -98,7 +98,7 @@ class ONUController extends BaseController
 
     public function show($id, BaseHttpResponse $response)
     {
-        $onu = ONU::with(['olt', 'bandwidthProfile'])->findOrFail($id);
+        $onu = Onu::with(['olt', 'bandwidthProfile'])->findOrFail($id);
         
         return $response->setData([
             'data' => $onu->toArray(),
@@ -108,7 +108,7 @@ class ONUController extends BaseController
 
     public function edit($id, BaseHttpResponse $response)
     {
-        $onu = ONU::findOrFail($id);
+        $onu = Onu::findOrFail($id);
         $olts = OLT::where('status', 'online')->get();
         
         return $response->setData(array_merge(
@@ -120,7 +120,7 @@ class ONUController extends BaseController
     public function update($id, ONURequest $request, BaseHttpResponse $response)
     {
         try {
-            $onu = ONU::findOrFail($id);
+            $onu = Onu::findOrFail($id);
             $this->onuService->updateONU($onu, $request->validated());
 
             return $response
@@ -134,7 +134,7 @@ class ONUController extends BaseController
 
     public function configuration($id, BaseHttpResponse $response)
     {
-        $onu = ONU::findOrFail($id);
+        $onu = Onu::findOrFail($id);
         $configuration = $onu->configuration;
 
         return $response->setData($configuration ?: []);
@@ -143,7 +143,7 @@ class ONUController extends BaseController
     public function configure($id, Request $request, BaseHttpResponse $response)
     {
         try {
-            $onu = ONU::findOrFail($id);
+            $onu = Onu::findOrFail($id);
             
             $configuration = [
                 'bandwidth_profile_id' => $request->input('bandwidth_profile_id'),
@@ -169,7 +169,7 @@ class ONUController extends BaseController
     public function reboot($id, BaseHttpResponse $response)
     {
         try {
-            $onu = ONU::findOrFail($id);
+            $onu = Onu::findOrFail($id);
             $this->onuService->rebootONU($onu);
 
             return $response
@@ -183,7 +183,7 @@ class ONUController extends BaseController
 
     public function performance($id, Request $request, BaseHttpResponse $response)
     {
-        $onu = ONU::findOrFail($id);
+        $onu = Onu::findOrFail($id);
         
         $days = $request->input('days', 7);
         $performance = $this->onuService->getPerformanceHistory($onu, $days);
@@ -193,7 +193,7 @@ class ONUController extends BaseController
 
     public function bandwidth($id, BaseHttpResponse $response)
     {
-        $onu = ONU::findOrFail($id);
+        $onu = Onu::findOrFail($id);
         $bandwidth = $onu->bandwidthProfile;
 
         return $response->setData($bandwidth ?: []);

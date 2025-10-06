@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class OltPerformanceLog extends BaseModel
 {
-    protected $table = 'olt_performance_logs';
+    protected $table = 'om_olt_performance_logs';
 
     public $timestamps = false;
 

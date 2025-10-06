@@ -11,17 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Add vendor field to olt_devices table
-        Schema::table('olt_devices', function (Blueprint $table) {
-            $table->enum('vendor', ['fiberhome', 'huawei', 'zte', 'other'])->default('fiberhome')->after('name');
-            $table->string('model')->nullable()->after('vendor');
-            $table->string('firmware_version')->nullable()->after('model');
-            
-            $table->index('vendor');
-        });
+       
 
         // Vendor-specific configurations
-        Schema::create('vendor_configurations', function (Blueprint $table) {
+        Schema::create('om_vendor_configurations', function (Blueprint $table) {
             $table->id();
             $table->enum('vendor', ['fiberhome', 'huawei', 'zte', 'other']);
             $table->string('model')->nullable();
@@ -35,7 +28,7 @@ return new class extends Migration
         });
 
         // Vendor-specific ONU types
-        Schema::create('onu_types', function (Blueprint $table) {
+        Schema::create('om_onu_types', function (Blueprint $table) {
             $table->id();
             $table->enum('vendor', ['fiberhome', 'huawei', 'zte', 'other']);
             $table->string('model');
@@ -52,18 +45,10 @@ return new class extends Migration
             $table->index(['vendor', 'model']);
         });
 
-        // Add vendor and model to onus table
-        Schema::table('onus', function (Blueprint $table) {
-            $table->enum('vendor', ['fiberhome', 'huawei', 'zte', 'other'])->default('fiberhome')->after('onu_name');
-            $table->string('model')->nullable()->after('vendor');
-            $table->foreignId('onu_type_id')->nullable()->after('model')->constrained()->onDelete('set null');
-            $table->string('firmware_version')->nullable()->after('onu_type_id');
-            
-            $table->index('vendor');
-        });
+       
 
         // Vendor-specific commands/templates
-        Schema::create('vendor_command_templates', function (Blueprint $table) {
+        Schema::create('om_vendor_command_templates', function (Blueprint $table) {
             $table->id();
             $table->enum('vendor', ['fiberhome', 'huawei', 'zte', 'other']);
             $table->string('command_name');
@@ -78,7 +63,7 @@ return new class extends Migration
         });
 
         // Vendor-specific service profiles
-        Schema::create('vendor_service_profiles', function (Blueprint $table) {
+        Schema::create('om_vendor_service_profiles', function (Blueprint $table) {
             $table->id();
             $table->enum('vendor', ['fiberhome', 'huawei', 'zte', 'other']);
             $table->string('profile_name');
@@ -97,19 +82,14 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('vendor_service_profiles');
-        Schema::dropIfExists('vendor_command_templates');
+        Schema::dropIfExists('om_vendor_service_profiles');
+        Schema::dropIfExists('om_vendor_command_templates');
         
-        Schema::table('onus', function (Blueprint $table) {
-            $table->dropForeign(['onu_type_id']);
-            $table->dropColumn(['vendor', 'model', 'onu_type_id', 'firmware_version']);
-        });
+      
         
-        Schema::dropIfExists('onu_types');
-        Schema::dropIfExists('vendor_configurations');
+        Schema::dropIfExists('om_onu_types');
+        Schema::dropIfExists('om_vendor_configurations');
         
-        Schema::table('olt_devices', function (Blueprint $table) {
-            $table->dropColumn(['vendor', 'model', 'firmware_version']);
-        });
+        
     }
 };

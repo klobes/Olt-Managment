@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class OnuPort extends BaseModel
 {
-    protected $table = 'onu_ports';
+    protected $table = 'om_onu_ports';
 
     protected $fillable = [
         'onu_id',

@@ -8,11 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('olt_pon_ports', function (Blueprint $table) {
+        Schema::create('om_olt_pon_ports', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('olt_device_id')->constrained()->onDelete('cascade');
-            $table->foreignId('olt_card_id')->constrained()->onDelete('cascade');
-            $table->integer('pon_index');
+			//$table->unsignedBigInteger('olt_id');
+           $table->integer('pon_index');
             $table->string('pon_name');
             $table->text('description')->nullable();
             $table->integer('pon_type')->nullable();
@@ -26,14 +25,19 @@ return new class extends Migration
             $table->integer('optical_temperature')->nullable();
             $table->integer('auth_onu_num')->default(0);
             $table->timestamps();
-            
-            $table->unique(['olt_device_id', 'pon_index']);
+			//if (Schema::hasTable('om_olts')) {
+				//$table->foreign('olt_id')->references('id')->on('om_olts')->onDelete('cascade');
+			//}
+			$table->foreignId('olt_id')->constrained('om_olts')->onDelete('cascade');
+
+            $table->foreignId('olt_card_id')->constrained('om_olt_cards')->onDelete('cascade');
+            $table->unique(['olt_id', 'pon_index']);
             $table->index('online_status');
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('olt_pon_ports');
+        Schema::dropIfExists('om_olt_pon_ports');
     }
 };

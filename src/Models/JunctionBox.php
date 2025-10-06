@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class JunctionBox extends BaseModel
 {
-    protected $table = 'junction_boxes';
+    protected $table = 'om_junction_boxes';
 
     protected $fillable = [
         'box_code',

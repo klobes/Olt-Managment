@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ServiceConfiguration extends BaseModel
 {
-    protected $table = 'service_configurations';
+    protected $table = 'om_service_configurations';
 
     protected $fillable = [
         'onu_port_id',

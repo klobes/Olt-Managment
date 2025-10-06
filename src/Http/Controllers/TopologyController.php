@@ -3,11 +3,13 @@
 namespace Botble\FiberhomeOltManager\Http\Controllers;
 
 use Botble\Base\Http\Controllers\BaseController;
-use Botble\FiberhomeOltManager\Models\FiberCable;
-use Botble\FiberhomeOltManager\Models\JunctionBox;
-use Botble\FiberhomeOltManager\Models\Splitter;
-use Botble\FiberhomeOltManager\Models\OltDevice;
+use Botble\FiberHomeOLTManager\Models\FiberCable;
+use Botble\FiberHomeOLTManager\Models\JunctionBox;
+use Botble\FiberHomeOLTManager\Models\Splitter;
+//use Botble\FiberhomeOltManager\Models\OLT;
 use Botble\FiberhomeOltManager\Models\Onu;
+use Botble\FiberHomeOLTManager\Models\OLT;
+
 use Illuminate\Http\Request;
 
 class TopologyController extends BaseController
@@ -16,15 +18,26 @@ class TopologyController extends BaseController
     {
         page_title()->setTitle('Network Topology');
 
-        $oltDevices = OltDevice::where('is_active', true)->get();
+        $oltDevices = OLT::where('is_active', true)->get();
         $fiberCables = FiberCable::where('status', 'active')->get();
         $junctionBoxes = JunctionBox::where('status', 'active')->get();
-        $splitters = Splitter::where('status', 'active')->get();
+        //$splitters = Splitter::where('status', 'active')->get();
 
         return view('plugins/fiberhome-olt-manager::topology.index', compact(
-            'oltDevices', 'fiberCables', 'junctionBoxes', 'splitters'
-        ));
+            'oltDevices', 'fiberCables', 'junctionBoxes',
+        ));// 'splitters'
     }
+	public function topology()
+    {
+        page_title()->setTitle(trans('plugins/fiberhome-olt-manager::topology.title'));
+
+        $olts = OLT::with(['onus' => function ($query) {
+            $query->select(['id', 'olt_id', 'serial_number', 'status', 'slot', 'port']);
+        }])->get();
+
+        return view('plugins/fiberhome-olt-manager::topology.index', compact('olts'));
+    }
+
 
     public function tracePath(Request $request, Onu $onu)
     {
@@ -63,19 +76,19 @@ class TopologyController extends BaseController
         ]);
     }
 
-    public function calculateOpticalBudget(Request $request)
-    {
-        $request->validate([
-            'path' => 'required|array',
-        ]);
+   // public function calculateOpticalBudget(Request $request)
+   // {
+   //     $request->validate([
+   //         'path' => 'required|array',
+   //     ]);
 
-        $budget = $this->calculateOpticalBudget($request->path);
+   //     $budget = $this->calculateOpticalBudget($request->path);
 
-        return response()->json([
-            'success' => true,
-            'budget' => $budget,
-        ]);
-    }
+   //     return response()->json([
+    //        'success' => true,
+   //         'budget' => $budget,
+    //    ]);
+    //}
 
     public function findOptimalPath(Request $request)
     {
@@ -170,30 +183,30 @@ class TopologyController extends BaseController
         ];
     }
 
-    private function findOptimalPath(string $sourceType, int $sourceId, string $destinationType, int $destinationId): array
-    {
+//    private function findOptimalPath(string $sourceType, int $sourceId, string $destinationType, int $destinationId): array
+//    {
         // Implement path finding algorithm (Dijkstra's or similar)
         // This is a simplified version - in real implementation would use graph algorithms
         
-        $path = [];
+//        $path = [];
         
         // Find all possible paths
-        $possiblePaths = $this->findAllPaths($sourceType, $sourceId, $destinationType, $destinationId);
+//        $possiblePaths = $this->findAllPaths($sourceType, $sourceId, $destinationType, $destinationId);
         
         // Select path with minimum loss
-        $optimalPath = null;
-        $minLoss = PHP_FLOAT_MAX;
+//        $optimalPath = null;
+ //       $minLoss = PHP_FLOAT_MAX;
         
-        foreach ($possiblePaths as $path) {
-            $budget = $this->calculateOpticalBudget($path);
-            if ($budget['total_loss'] < $minLoss) {
-                $minLoss = $budget['total_loss'];
-                $optimalPath = $path;
-            }
-        }
+//        foreach ($possiblePaths as $path) {
+ //           $budget = $this->calculateOpticalBudget($path);
+ //           if ($budget['total_loss'] < $minLoss) {
+ //               $minLoss = $budget['total_loss'];
+//                $optimalPath = $path;
+//            }
+//        }
         
-        return $optimalPath ?? [];
-    }
+//        return $optimalPath ?? [];
+//    }
 
     private function findSegmentToOnu(Onu $onu): ?object
     {
@@ -215,7 +228,7 @@ class TopologyController extends BaseController
     {
         switch ($type) {
             case 'OltDevice':
-                return OltDevice::find($id);
+                return OLT::find($id);
             case 'JunctionBox':
                 return JunctionBox::find($id);
             case 'Splitter':

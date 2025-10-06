@@ -23,7 +23,7 @@ class BandwidthProfileController extends BaseController
     {
         page_title()->setTitle(trans('plugins/fiberhome-olt-manager::bandwidth.title'));
         
-        return view('plugins.fiberhome-olt-manager::bandwidth-profile.index');
+        return view('plugins/fiberhome-olt-manager::bandwidth-profile.index');
     }
 
     public function datatable(Request $request)

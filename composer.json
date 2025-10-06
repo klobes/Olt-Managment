@@ -16,7 +16,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Botble\\FiberhomeOltManager\&quot;: "src/"
+            "Botble\\FiberHomeOLTManager\\": "src/"
         }
     },
     "minimum-stability": "dev",

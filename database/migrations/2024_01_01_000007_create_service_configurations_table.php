@@ -8,9 +8,9 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('service_configurations', function (Blueprint $table) {
+        Schema::create('om_service_configurations', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('onu_port_id')->constrained()->onDelete('cascade');
+            $table->foreignId('onu_port_id')->constrained('om_onu_ports')->onDelete('cascade');
             $table->integer('service_id');
             $table->enum('service_type', ['unicast', 'multicast'])->default('unicast');
             $table->enum('cvlan_mode', ['tag', 'transparent'])->default('tag');
@@ -33,6 +33,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('service_configurations');
+        Schema::dropIfExists('om_service_configurations');
     }
 };

@@ -8,20 +8,20 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('olt_performance_logs', function (Blueprint $table) {
+        Schema::create('om_olt_performance_logs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('olt_device_id')->constrained()->onDelete('cascade');
+            $table->foreignId('olt_id')->constrained('om_olts')->onDelete('cascade');
             $table->integer('cpu_utilization')->nullable();
             $table->integer('memory_utilization')->nullable();
             $table->integer('temperature')->nullable();
             $table->timestamp('recorded_at');
             
-            $table->index(['olt_device_id', 'recorded_at']);
+            $table->index(['olt_id', 'recorded_at']);
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('olt_performance_logs');
+        Schema::dropIfExists('om_olt_performance_logs');
     }
 };

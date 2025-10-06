@@ -8,19 +8,14 @@ use Botble\FiberhomeOltManager\Http\Controllers\OnuController;
 use Botble\FiberhomeOltManager\Http\Controllers\BandwidthProfileController;
 
 AdminHelper::registerRoutes(function () {
-    Route::group(['prefix' => 'fiberhome-olt', 'as' => 'fiberhome-olt.'], function () {
+//Route::group(['middleware' => ['web', 'api']], function () {//core
+
+    Route::group(['prefix' => 'fiberhome-olt', 'as' => 'fiberhome-olt.','middleware' => ['web', 'api']], function () {
         // Dashboard
         Route::get('/', [DashboardController::class, 'index'])->name('index');
         
-        // Topology Management (v2.0.0)
-        Route::group(['prefix' => 'topology', 'as' => 'topology.'], function () {
-            Route::get('/', [TopologyController::class, 'index'])->name('index');
-            Route::get('trace/{onu}', [TopologyController::class, 'tracePath'])->name('trace-path');
-            Route::get('junction-box/{junctionBox}', [TopologyController::class, 'getJunctionBoxDetails'])->name('junction-box-details');
-            Route::get('splitter/{splitter}/available-ports', [TopologyController::class, 'getAvailablePorts'])->name('splitter-available-ports');
-            Route::post('calculate-budget', [TopologyController::class, 'calculateOpticalBudget'])->name('calculate-budget');
-            Route::post('find-path', [TopologyController::class, 'findOptimalPath'])->name('find-optimal-path');
-        });
+        
+        
         
         // Vendor Management (v1.5.0)
         Route::group(['prefix' => 'vendor', 'as' => 'vendor.'], function () {
@@ -77,4 +72,5 @@ AdminHelper::registerRoutes(function () {
             Route::post('bandwidth-profiles', [BandwidthProfileController::class, 'getTable'])->name('bandwidth-profiles.table');
         });
     });
+//});
 });

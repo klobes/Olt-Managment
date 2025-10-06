@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class OltCard extends BaseModel
 {
-    protected $table = 'olt_cards';
+    protected $table = 'om_olt_cards';
 
     protected $fillable = [
         'olt_device_id',

@@ -44,14 +44,14 @@ class FiberHomeOLTManagerServiceProvider extends ServiceProvider
     {
         $this
             ->setNamespace('plugins/fiberhome-olt-manager')
-            ->loadAndPublishConfigurations(['permissions'])
+            ->loadAndPublishConfigurations(['permissions','fiberhome-olt'])
             ->loadAndPublishTranslations()
             ->loadAndPublishViews()
-            ->loadRoutes(['web', 'api', 'admin'])
+            ->loadRoutes(['web', 'admin'])
             ->publishAssets();
 
-        $this->app->register(EventServiceProvider::class);
-        $this->app->register(ConsoleServiceProvider::class);
+       // $this->app->register(EventServiceProvider::class);
+       // $this->app->register(ConsoleServiceProvider::class);
 
         Event::listen(RouteMatched::class, function () {
             $this->registerMenuItems();
@@ -65,8 +65,8 @@ class FiberHomeOLTManagerServiceProvider extends ServiceProvider
             return;
         }
 
-        DashboardMenu::default()
-            ->before('plugins')
+        DashboardMenu::beforeRetrieving(function (): void {
+        DashboardMenu::make()
             ->registerItem([
                 'id' => 'cms-plugins-fiberhome-olt-manager',
                 'priority' => 5,
@@ -118,7 +118,7 @@ class FiberHomeOLTManagerServiceProvider extends ServiceProvider
                 'parent_id' => 'cms-plugins-fiberhome-olt-manager',
                 'name' => 'plugins/fiberhome-olt-manager::menu.network_topology',
                 'icon' => 'fa fa-sitemap',
-                'url' => route('fiberhome.topology'),
+                'url' => route('fiberhome.topology.index'),
                 'permissions' => ['fiberhome-olt-manager.topology.index'],
             ])
             ->registerItem([
@@ -130,10 +130,14 @@ class FiberHomeOLTManagerServiceProvider extends ServiceProvider
                 'url' => route('fiberhome.settings.index'),
                 'permissions' => ['fiberhome-olt-manager.settings.index'],
             ]);
+		});	
     }
 
     protected function registerPanelSections()
     {
+		PanelSectionManager::beforeRendering(function (): void {
+            
+       
         PanelSectionManager::default()
             ->registerItem(
                 PanelSectionItem::make('fiberhome-olt-manager')
@@ -144,5 +148,6 @@ class FiberHomeOLTManagerServiceProvider extends ServiceProvider
                     ->withRoute('fiberhome.dashboard')
                     ->withPermission('fiberhome-olt-manager.index')
             );
+		 });
     }
 }

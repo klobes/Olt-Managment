@@ -90,7 +90,6 @@
     </div>
 @endsection
 
-@push('footer')
     <script>
         $(document).ready(function() {
             $('.setting-form').on('submit', function(e) {
@@ -108,10 +107,9 @@
                         }
                     },
                     error: function(xhr) {
-                        Botble.showError('{{ trans("plugins/fiberhome-olt-manager::settings.save_error") }}');
+                        Botble.showError('trans("plugins/fiberhome-olt-manager::settings.save_error")');
                     }
                 });
             });
         });
     </script>
-@endpush

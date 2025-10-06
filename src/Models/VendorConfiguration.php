@@ -6,7 +6,7 @@ use Botble\Base\Models\BaseModel;
 
 class VendorConfiguration extends BaseModel
 {
-    protected $table = 'vendor_configurations';
+    protected $table = 'om_vendor_configurations';
 
     protected $fillable = [
         'vendor',

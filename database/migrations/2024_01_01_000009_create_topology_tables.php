@@ -12,28 +12,49 @@ return new class extends Migration
     public function up(): void
     {
         // Fiber Cables
-        Schema::create('fiber_cables', function (Blueprint $table) {
+        Schema::create('om_fiber_cables', function (Blueprint $table) {
             $table->id();
+			$table->string('name');
+
             $table->string('cable_code')->unique();
             $table->string('cable_name');
             $table->enum('cable_type', ['single_mode', 'multi_mode', 'armored', 'aerial', 'underground']);
-            $table->integer('fiber_count'); // Number of fibers in cable
-            $table->decimal('length', 10, 2); // Length in meters
             $table->string('manufacturer')->nullable();
             $table->string('model')->nullable();
             $table->date('installation_date')->nullable();
             $table->text('description')->nullable();
             $table->json('specifications')->nullable(); // Additional specs
             $table->enum('status', ['active', 'inactive', 'damaged', 'maintenance'])->default('active');
+			///////////////////////
+            $table->string('from_device_type');
+            $table->unsignedBigInteger('from_device_id');
+            $table->integer('from_port')->nullable();
+            $table->string('to_device_type');
+            $table->unsignedBigInteger('to_device_id');
+            $table->integer('to_port')->nullable();
+            $table->decimal('length', 8, 2)->default(0);
+            $table->integer('fiber_count')->default(1);
+            $table->string('color')->default('yellow');
+            $table->integer('splicing_points')->default(0);
+            $table->json('coordinates')->nullable();
+            $table->json('waypoints')->nullable();
+            $table->text('notes')->nullable();
             $table->timestamps();
-            
+			////////////////////
+            $table->index(['from_device_type', 'from_device_id']);
+            $table->index(['to_device_type', 'to_device_id']);
             $table->index('cable_code');
             $table->index('status');
         });
 
         // Junction Boxes (Xhundo)
-        Schema::create('junction_boxes', function (Blueprint $table) {
+        Schema::create('om_junction_boxes', function (Blueprint $table) {
             $table->id();
+			////////////
+            $table->string('location');
+            $table->json('coordinates')->nullable();
+            $table->integer('used_ports')->default(0);
+            $table->enum('type', ['outdoor', 'indoor', 'underground', 'aerial'])->default('outdoor');
             $table->string('box_code')->unique();
             $table->string('box_name');
             $table->enum('box_type', ['street', 'building', 'pole', 'underground', 'wall_mount']);
@@ -49,14 +70,16 @@ return new class extends Migration
             $table->json('photos')->nullable(); // Array of photo URLs
             $table->text('notes')->nullable();
             $table->timestamps();
-            
+			
+            $table->index('location');
+            $table->index('type');
             $table->index('box_code');
             $table->index(['latitude', 'longitude']);
             $table->index('status');
         });
 
         // Splitters
-        Schema::create('splitters', function (Blueprint $table) {
+        Schema::create('om_splitters', function (Blueprint $table) {
             $table->id();
             $table->string('splitter_code')->unique();
             $table->string('splitter_name');
@@ -65,7 +88,7 @@ return new class extends Migration
             $table->integer('output_ports'); // 2, 4, 8, 16, 32, 64
             $table->integer('used_output_ports')->default(0);
             $table->decimal('insertion_loss', 5, 2)->nullable(); // dB
-            $table->foreignId('junction_box_id')->nullable()->constrained()->onDelete('set null');
+            $table->foreignId('junction_box_id')->nullable()->constrained('om_junction_boxes')->onDelete('set null');
             $table->decimal('latitude', 10, 8)->nullable();
             $table->decimal('longitude', 11, 8)->nullable();
             $table->string('location')->nullable();
@@ -81,13 +104,13 @@ return new class extends Migration
         });
 
         // Splice Cassettes (Kaseta)
-        Schema::create('splice_cassettes', function (Blueprint $table) {
+        Schema::create('om_splice_cassettes', function (Blueprint $table) {
             $table->id();
             $table->string('cassette_code')->unique();
             $table->string('cassette_name');
             $table->integer('capacity'); // Number of splices
             $table->integer('used_capacity')->default(0);
-            $table->foreignId('junction_box_id')->nullable()->constrained()->onDelete('set null');
+            $table->foreignId('junction_box_id')->nullable()->constrained('om_junction_boxes')->onDelete('set null');
             $table->string('tray_number')->nullable();
             $table->date('installation_date')->nullable();
             $table->enum('status', ['active', 'inactive', 'damaged', 'full'])->default('active');
@@ -101,9 +124,9 @@ return new class extends Migration
         });
 
         // Cable Segments (Connections between equipment)
-        Schema::create('cable_segments', function (Blueprint $table) {
+        Schema::create('om_cable_segments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('fiber_cable_id')->constrained()->onDelete('cascade');
+            $table->foreignId('fiber_cable_id')->constrained('om_fiber_cables')->onDelete('cascade');
             $table->integer('fiber_number'); // Which fiber in the cable (1-N)
             
             // Source (can be OLT, Junction Box, Splitter, or Cassette)
@@ -128,16 +151,16 @@ return new class extends Migration
         });
 
         // Fiber Splices (Connections in cassettes)
-        Schema::create('fiber_splices', function (Blueprint $table) {
+        Schema::create('om_fiber_splices', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('splice_cassette_id')->constrained()->onDelete('cascade');
+            $table->foreignId('splice_cassette_id')->constrained('om_splice_cassettes')->onDelete('cascade');
             $table->integer('splice_number'); // Position in cassette
             
             // Input fiber
-            $table->foreignId('input_cable_segment_id')->constrained('cable_segments')->onDelete('cascade');
+            $table->foreignId('input_cable_segment_id')->constrained('om_cable_segments')->onDelete('cascade');
             
             // Output fiber
-            $table->foreignId('output_cable_segment_id')->constrained('cable_segments')->onDelete('cascade');
+            $table->foreignId('output_cable_segment_id')->constrained('om_cable_segments')->onDelete('cascade');
             
             $table->decimal('splice_loss', 5, 2)->nullable(); // Loss in dB
             $table->enum('splice_type', ['fusion', 'mechanical'])->default('fusion');
@@ -152,16 +175,16 @@ return new class extends Migration
         });
 
         // Splitter Connections
-        Schema::create('splitter_connections', function (Blueprint $table) {
+        Schema::create('om_splitter_connections', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('splitter_id')->constrained()->onDelete('cascade');
+            $table->foreignId('splitter_id')->constrained('om_splitters')->onDelete('cascade');
             
             // Input connection
-            $table->foreignId('input_cable_segment_id')->nullable()->constrained('cable_segments')->onDelete('set null');
+            $table->foreignId('input_cable_segment_id')->nullable()->constrained('om_cable_segments')->onDelete('set null');
             $table->string('input_port')->default('IN');
             
             // Output connection
-            $table->foreignId('output_cable_segment_id')->nullable()->constrained('cable_segments')->onDelete('set null');
+            $table->foreignId('output_cable_segment_id')->nullable()->constrained('om_cable_segments')->onDelete('set null');
             $table->integer('output_port_number'); // 1 to N (based on splitter type)
             
             $table->decimal('port_loss', 5, 2)->nullable(); // Loss in dB
@@ -174,7 +197,7 @@ return new class extends Migration
         });
 
         // Maintenance History
-        Schema::create('equipment_maintenance', function (Blueprint $table) {
+        Schema::create('om_equipment_maintenance', function (Blueprint $table) {
             $table->id();
             $table->string('equipment_type'); // FiberCable, JunctionBox, Splitter, etc.
             $table->unsignedBigInteger('equipment_id');
@@ -193,7 +216,7 @@ return new class extends Migration
         });
 
         // Topology Snapshots (for version control)
-        Schema::create('topology_snapshots', function (Blueprint $table) {
+        Schema::create('om_topology_snapshots', function (Blueprint $table) {
             $table->id();
             $table->string('snapshot_name');
             $table->text('description')->nullable();
@@ -208,14 +231,14 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('topology_snapshots');
-        Schema::dropIfExists('equipment_maintenance');
-        Schema::dropIfExists('splitter_connections');
-        Schema::dropIfExists('fiber_splices');
-        Schema::dropIfExists('cable_segments');
-        Schema::dropIfExists('splice_cassettes');
-        Schema::dropIfExists('splitters');
-        Schema::dropIfExists('junction_boxes');
-        Schema::dropIfExists('fiber_cables');
+        Schema::dropIfExists('om_topology_snapshots');
+        Schema::dropIfExists('om_equipment_maintenance');
+        Schema::dropIfExists('om_splitter_connections');
+        Schema::dropIfExists('om_fiber_splices');
+        Schema::dropIfExists('om_cable_segments');
+        Schema::dropIfExists('om_splice_cassettes');
+        Schema::dropIfExists('om_splitters');
+        Schema::dropIfExists('om_junction_boxes');
+        Schema::dropIfExists('om_fiber_cables');
     }
 };

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class FiberCable extends BaseModel
 {
-    protected $table = 'fiber_cables';
+    protected $table = 'om_fiber_cables';
 
     protected $fillable = [
         'cable_code',

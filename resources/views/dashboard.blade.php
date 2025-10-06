@@ -154,7 +154,7 @@
                             <a href="{{ route('fiberhome.settings.index') }}" class="btn btn-secondary">
                                 <i class="fa fa-cog"></i> {{ trans('plugins/fiberhome-olt-manager::dashboard.settings') }}
                             </a>
-                            <a href="{{ route('fiberhome.topology') }}" class="btn btn-success">
+                            <a href="{{ route('fiberhome.topology.index') }}" class="btn btn-success">
                                 <i class="fa fa-sitemap"></i> {{ trans('plugins/fiberhome-olt-manager::dashboard.network_topology') }}
                             </a>
                         </div>
