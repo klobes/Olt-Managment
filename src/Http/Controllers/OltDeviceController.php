@@ -42,33 +42,79 @@ class OltDeviceController extends BaseController
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'ip_address' => 'required|ip|unique:olt_devices',
+            'vendor' => 'required|string|in:fiberhome,huawei,zte',
+            'model' => 'required|string|max:255',
             'snmp_community' => 'required|string|max:255',
             'snmp_version' => 'required|in:1,2c,3',
-            'snmp_port' => 'required|integer|min:1|max:65535',
+            'snmp_port' => 'nullable|integer|min:1|max:65535',
             'location' => 'nullable|string|max:255',
             'description' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+            
             return redirect()
                 ->back()
                 ->withErrors($validator)
                 ->withInput();
         }
 
-        $device = OltDevice::create($request->all());
+        try {
+            // Create device
+            $device = OltDevice::create(array_merge($request->all(), [
+                'snmp_port' => $request->snmp_port ?? 161,
+                'status' => 'pending'
+            ]));
 
-        // Test connection
-        if ($this->snmp->testConnection($device)) {
-            $device->update(['status' => 'online']);
+            // Test connection
+            if ($this->snmp->testConnection($device)) {
+                $device->update(['status' => 'online']);
+                
+                // Collect initial data in background
+                try {
+                    $this->collector->collectAll($device);
+                } catch (\Exception $e) {
+                    \Log::warning("Failed to collect initial data for OLT {$device->name}: " . $e->getMessage());
+                }
+                
+                $message = 'OLT device added successfully and is online';
+            } else {
+                $device->update(['status' => 'offline']);
+                $message = 'OLT device added but connection failed';
+            }
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $message,
+                    'data' => $device
+                ]);
+            }
+
+            return redirect()
+                ->route('fiberhome-olt.devices.show', $device->id)
+                ->with('success', $message);
+                
+        } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to add OLT device: ' . $e->getMessage()
+                ], 500);
+            }
             
-            // Collect initial data
-            $this->collector->collectAll($device);
+            return redirect()
+                ->back()
+                ->withErrors(['error' => 'Failed to add OLT device: ' . $e->getMessage()])
+                ->withInput();
         }
-
-        return redirect()
-            ->route('fiberhome-olt.devices.show', $device->id)
-            ->with('success', 'OLT device added successfully');
     }
 
     public function show($id)
@@ -151,21 +197,75 @@ class OltDeviceController extends BaseController
         ], 500);
     }
 
-    public function testConnection(Request $request, $id)
+    public function testConnection(Request $request, $id = null)
     {
-        $device = OltDevice::findOrFail($id);
+        // If ID is provided, test existing device
+        if ($id) {
+            $device = OltDevice::findOrFail($id);
+            
+            if ($this->snmp->testConnection($device)) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Connection successful',
+                ]);
+            }
 
-        if ($this->snmp->testConnection($device)) {
             return response()->json([
-                'success' => true,
-                'message' => 'Connection successful',
-            ]);
+                'success' => false,
+                'message' => 'Connection failed',
+            ], 500);
+        }
+        
+        // Test connection with provided parameters (for new device)
+        $validator = Validator::make($request->all(), [
+            'ip_address' => 'required|ip',
+            'snmp_community' => 'required|string',
+            'snmp_version' => 'required|in:1,2c,3',
+            'snmp_port' => 'nullable|integer|min:1|max:65535',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
         }
 
-        return response()->json([
-            'success' => false,
-            'message' => 'Connection failed',
-        ], 500);
+        // Create temporary device object for testing
+        $tempDevice = new OltDevice([
+            'ip_address' => $request->ip_address,
+            'snmp_community' => $request->snmp_community,
+            'snmp_version' => $request->snmp_version,
+            'snmp_port' => $request->snmp_port ?? 161,
+        ]);
+
+        try {
+            if ($this->snmp->testConnection($tempDevice)) {
+                // Try to get system description
+                $systemInfo = $this->snmp->getSystemInfo($tempDevice);
+                
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Connection successful',
+                    'data' => [
+                        'system_description' => $systemInfo['sysDescr'] ?? null,
+                        'system_name' => $systemInfo['sysName'] ?? null,
+                        'uptime' => $systemInfo['sysUpTime'] ?? null,
+                    ]
+                ]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Connection failed - Unable to communicate with device',
+            ], 500);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Connection error: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**

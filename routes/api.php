@@ -30,11 +30,12 @@ Route::group([
     Route::group(['prefix' => 'devices', 'as' => 'devices.'], function () {
         Route::get('/', [OltDeviceController::class, 'index'])->name('index');
         Route::post('/', [OltDeviceController::class, 'store'])->name('store');
+        Route::post('test-connection', [OltDeviceController::class, 'testConnection'])->name('test-connection');
         Route::get('{id}', [OltDeviceController::class, 'getDetails'])->name('show');
         Route::put('{id}', [OltDeviceController::class, 'update'])->name('update');
         Route::delete('{id}', [OltDeviceController::class, 'destroy'])->name('destroy');
         Route::post('{id}/sync', [OltDeviceController::class, 'sync'])->name('sync');
-        Route::post('{id}/test-connection', [OltDeviceController::class, 'testConnection'])->name('test-connection');
+        Route::post('{id}/test-connection', [OltDeviceController::class, 'testConnection'])->name('test-connection-existing');
         Route::post('datatable', [OltDeviceController::class, 'getTable'])->name('datatable');
     });
     

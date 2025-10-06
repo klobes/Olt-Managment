@@ -18,6 +18,7 @@ mix.setPublicPath('public');
 mix.js('resources/assets/js/dashboard.js', 'public/js')
    .js('resources/assets/js/datatables-init.js', 'public/js')
    .js('resources/assets/js/olt-management.js', 'public/js')
+   .js('resources/assets/js/olt-operations.js', 'public/js')
    .js('resources/assets/js/onu-management.js', 'public/js')
    .js('resources/assets/js/bandwidth-profiles.js', 'public/js')
    .js('resources/assets/js/settings.js', 'public/js')
