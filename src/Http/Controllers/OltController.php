@@ -3,14 +3,13 @@
 namespace Botble\FiberhomeOltManager\Http\Controllers;
 
 use Botble\Base\Http\Controllers\BaseController;
-use Botble\FiberhomeOltManager\Models\OltDevice;
+use Botble\FiberhomeOltManager\Models\OLT;
 use Botble\FiberhomeOltManager\Services\SnmpManager;
 use Botble\FiberhomeOltManager\Services\OltDataCollector;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Botble\FiberhomeOltManager\Tables\OltDeviceTable;
 
-class OltDeviceController extends BaseController
+class OltController extends BaseController
 {
     protected SnmpManager $snmp;
     protected OltDataCollector $collector;
@@ -25,9 +24,7 @@ class OltDeviceController extends BaseController
     {
         page_title()->setTitle('OLT Devices');
 
-        $devices = OltDevice::orderBy('created_at', 'desc')->paginate(20);
-
-        return view('plugins/fiberhome-olt-manager::devices.index', compact('devices'));
+        return view('plugins/fiberhome-olt-manager::olt.index');
     }
 
     public function create()
@@ -41,7 +38,7 @@ class OltDeviceController extends BaseController
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'ip_address' => 'required|ip|unique:olt_devices',
+            'ip_address' => 'required|ip|unique:om_olts',
             'vendor' => 'required|string|in:fiberhome,huawei,zte',
             'model' => 'required|string|max:255',
             'snmp_community' => 'required|string|max:255',
@@ -68,7 +65,7 @@ class OltDeviceController extends BaseController
 
         try {
             // Create device
-            $device = OltDevice::create(array_merge($request->all(), [
+            $device = OLT::create(array_merge($request->all(), [
                 'snmp_port' => $request->snmp_port ?? 161,
                 'status' => 'pending'
             ]));
@@ -119,7 +116,7 @@ class OltDeviceController extends BaseController
 
     public function show($id)
     {
-        $device = OltDevice::with(['cards', 'ponPorts', 'onus'])->findOrFail($id);
+        $device = OLT::with(['cards', 'ponPorts', 'onus'])->findOrFail($id);
         
         page_title()->setTitle($device->name);
 
@@ -134,7 +131,7 @@ class OltDeviceController extends BaseController
 
     public function edit($id)
     {
-        $device = OltDevice::findOrFail($id);
+        $device = OLT::findOrFail($id);
         
         page_title()->setTitle('Edit ' . $device->name);
 
@@ -143,11 +140,13 @@ class OltDeviceController extends BaseController
 
     public function update(Request $request, $id)
     {
-        $device = OltDevice::findOrFail($id);
+        $device = OLT::findOrFail($id);
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'ip_address' => 'required|ip|unique:olt_devices,ip_address,' . $id,
+            'ip_address' => 'required|ip|unique:om_olts,ip_address,' . $id,
+            'vendor' => 'required|string|in:fiberhome,huawei,zte',
+            'model' => 'required|string|max:255',
             'snmp_community' => 'required|string|max:255',
             'snmp_version' => 'required|in:1,2c,3',
             'snmp_port' => 'required|integer|min:1|max:65535',
@@ -157,6 +156,14 @@ class OltDeviceController extends BaseController
         ]);
 
         if ($validator->fails()) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+            
             return redirect()
                 ->back()
                 ->withErrors($validator)
@@ -165,6 +172,14 @@ class OltDeviceController extends BaseController
 
         $device->update($request->all());
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'OLT device updated successfully',
+                'data' => $device
+            ]);
+        }
+
         return redirect()
             ->route('fiberhome-olt.devices.show', $device->id)
             ->with('success', 'OLT device updated successfully');
@@ -172,8 +187,15 @@ class OltDeviceController extends BaseController
 
     public function destroy($id)
     {
-        $device = OltDevice::findOrFail($id);
+        $device = OLT::findOrFail($id);
         $device->delete();
+
+        if (request()->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'OLT device deleted successfully'
+            ]);
+        }
 
         return redirect()
             ->route('fiberhome-olt.devices.index')
@@ -182,26 +204,33 @@ class OltDeviceController extends BaseController
 
     public function sync(Request $request, $id)
     {
-        $device = OltDevice::findOrFail($id);
+        $device = OLT::findOrFail($id);
 
-        if ($this->collector->collectAll($device)) {
+        try {
+            if ($this->collector->collectAll($device)) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Data synchronized successfully',
+                ]);
+            }
+
             return response()->json([
-                'success' => true,
-                'message' => 'Data synchronized successfully',
-            ]);
+                'success' => false,
+                'message' => 'Failed to synchronize data',
+            ], 500);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sync error: ' . $e->getMessage(),
+            ], 500);
         }
-
-        return response()->json([
-            'success' => false,
-            'message' => 'Failed to synchronize data',
-        ], 500);
     }
 
     public function testConnection(Request $request, $id = null)
     {
         // If ID is provided, test existing device
         if ($id) {
-            $device = OltDevice::findOrFail($id);
+            $device = OLT::findOrFail($id);
             
             if ($this->snmp->testConnection($device)) {
                 return response()->json([
@@ -233,7 +262,7 @@ class OltDeviceController extends BaseController
         }
 
         // Create temporary device object for testing
-        $tempDevice = new OltDevice([
+        $tempDevice = new OLT([
             'ip_address' => $request->ip_address,
             'snmp_community' => $request->snmp_community,
             'snmp_version' => $request->snmp_version,
@@ -274,7 +303,7 @@ class OltDeviceController extends BaseController
     public function getTable(Request $request)
     {
         if ($request->ajax()) {
-            $devices = OltDevice::with(['onus'])->select('olt_devices.*');
+            $devices = OLT::with(['onus'])->select('om_olts.*');
             
             return datatables()
                 ->eloquent($devices)
@@ -285,19 +314,20 @@ class OltDeviceController extends BaseController
                     $statusClass = [
                         'online' => 'success',
                         'offline' => 'danger',
-                        'error' => 'warning'
+                        'error' => 'warning',
+                        'pending' => 'info'
                     ];
                     $class = $statusClass[$device->status] ?? 'secondary';
                     return '<span class="badge bg-' . $class . '">' . ucfirst($device->status) . '</span>';
                 })
                 ->addColumn('actions', function ($device) {
-                    return view('plugins/fiberhome-olt-manager::devices.partials.actions', compact('device'))->render();
+                    return view('plugins/fiberhome-olt-manager::olt.partials.actions', compact('device'))->render();
                 })
                 ->rawColumns(['status', 'actions'])
                 ->make(true);
         }
         
-        return app(OltDeviceTable::class)->render();
+        return response()->json(['error' => 'Invalid request'], 400);
     }
     
     /**
@@ -305,7 +335,7 @@ class OltDeviceController extends BaseController
      */
     public function getDetails($id)
     {
-        $device = OltDevice::with(['cards', 'ponPorts', 'onus'])->findOrFail($id);
+        $device = OLT::with(['cards', 'ponPorts', 'onus'])->findOrFail($id);
         
         return response()->json([
             'success' => true,
@@ -323,7 +353,10 @@ class OltDeviceController extends BaseController
                 'snmp_port' => $device->snmp_port,
                 'onu_count' => $device->onus()->count(),
                 'uptime' => $device->uptime,
-                'last_sync' => $device->last_poll ? $device->last_poll->diffForHumans() : 'Never',
+                'cpu_usage' => $device->cpu_usage,
+                'memory_usage' => $device->memory_usage,
+                'temperature' => $device->temperature,
+                'last_sync' => $device->last_polled ? $device->last_polled->diffForHumans() : 'Never',
             ]
         ]);
     }

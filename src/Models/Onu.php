@@ -54,9 +54,9 @@ class Onu extends BaseModel
         return $this->belongsTo(OLT::class, 'olt_id');
     }
     
-//    public function oltDevice()
+//    public function olt()
 //    {
-//        return $this->belongsTo(OltDevice::class);
+//        return $this->belongsTo(OLT::class, 'olt_id');
 //    }
     
     public function bandwidthProfile()
@@ -64,9 +64,9 @@ class Onu extends BaseModel
         return $this->belongsTo(BandwidthProfile::class, 'bandwidth_profile_id');
     }
 
-    public function oltDevice(): BelongsTo
+    public function olt(): BelongsTo
     {
-        return $this->belongsTo(OltDevice::class);
+        return $this->belongsTo(OLT::class, 'olt_id');
     }
 
     public function oltPonPort(): BelongsTo

@@ -33,9 +33,9 @@ class OltCard extends BaseModel
         'mem_util' => 'integer',
     ];
 
-    public function oltDevice(): BelongsTo
+    public function olt(): BelongsTo
     {
-        return $this->belongsTo(OltDevice::class);
+        return $this->belongsTo(OLT::class, 'olt_id');
     }
 
     public function ponPorts(): HasMany

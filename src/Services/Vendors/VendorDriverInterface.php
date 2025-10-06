@@ -2,7 +2,7 @@
 
 namespace Botble\FiberhomeOltManager\Services\Vendors;
 
-use Botble\FiberhomeOltManager\Models\OltDevice;
+use Botble\FiberhomeOltManager\Models\OLT;
 use Botble\FiberhomeOltManager\Models\Onu;
 
 /**
@@ -16,142 +16,142 @@ interface VendorDriverInterface
     /**
      * Get system information from OLT
      *
-     * @param OltDevice $olt
+     * @param OLT $olt
      * @return array
      */
-    public function getSystemInfo(OltDevice $olt): array;
+    public function getSystemInfo(OLT $olt): array;
 
     /**
      * Get all cards/slots information
      *
-     * @param OltDevice $olt
+     * @param OLT $olt
      * @return array
      */
-    public function getCards(OltDevice $olt): array;
+    public function getCards(OLT $olt): array;
 
     /**
      * Get all PON ports information
      *
-     * @param OltDevice $olt
+     * @param OLT $olt
      * @return array
      */
-    public function getPonPorts(OltDevice $olt): array;
+    public function getPonPorts(OLT $olt): array;
 
     /**
      * Get all ONUs from OLT
      *
-     * @param OltDevice $olt
+     * @param OLT $olt
      * @return array
      */
-    public function getOnus(OltDevice $olt): array;
+    public function getOnus(OLT $olt): array;
 
     /**
      * Get specific ONU information
      *
-     * @param OltDevice $olt
+     * @param OLT $olt
      * @param string $onuId
      * @return array
      */
-    public function getOnuInfo(OltDevice $olt, string $onuId): array;
+    public function getOnuInfo(OLT $olt, string $onuId): array;
 
     /**
      * Get ONU optical power (RX/TX)
      *
-     * @param OltDevice $olt
+     * @param OLT $olt
      * @param string $onuId
      * @return array
      */
-    public function getOnuOpticalPower(OltDevice $olt, string $onuId): array;
+    public function getOnuOpticalPower(OLT $olt, string $onuId): array;
 
     /**
      * Get ONU distance
      *
-     * @param OltDevice $olt
+     * @param OLT $olt
      * @param string $onuId
      * @return float
      */
-    public function getOnuDistance(OltDevice $olt, string $onuId): float;
+    public function getOnuDistance(OLT $olt, string $onuId): float;
 
     /**
      * Enable ONU
      *
-     * @param OltDevice $olt
+     * @param OLT $olt
      * @param Onu $onu
      * @return bool
      */
-    public function enableOnu(OltDevice $olt, Onu $onu): bool;
+    public function enableOnu(OLT $olt, Onu $onu): bool;
 
     /**
      * Disable ONU
      *
-     * @param OltDevice $olt
+     * @param OLT $olt
      * @param Onu $onu
      * @return bool
      */
-    public function disableOnu(OltDevice $olt, Onu $onu): bool;
+    public function disableOnu(OLT $olt, Onu $onu): bool;
 
     /**
      * Reboot ONU
      *
-     * @param OltDevice $olt
+     * @param OLT $olt
      * @param Onu $onu
      * @return bool
      */
-    public function rebootOnu(OltDevice $olt, Onu $onu): bool;
+    public function rebootOnu(OLT $olt, Onu $onu): bool;
 
     /**
      * Configure ONU bandwidth profile
      *
-     * @param OltDevice $olt
+     * @param OLT $olt
      * @param Onu $onu
      * @param array $profile
      * @return bool
      */
-    public function configureBandwidth(OltDevice $olt, Onu $onu, array $profile): bool;
+    public function configureBandwidth(OLT $olt, Onu $onu, array $profile): bool;
 
     /**
      * Configure ONU VLAN
      *
-     * @param OltDevice $olt
+     * @param OLT $olt
      * @param Onu $onu
      * @param array $vlanConfig
      * @return bool
      */
-    public function configureVlan(OltDevice $olt, Onu $onu, array $vlanConfig): bool;
+    public function configureVlan(OLT $olt, Onu $onu, array $vlanConfig): bool;
 
     /**
      * Get performance metrics (CPU, Memory, Temperature)
      *
-     * @param OltDevice $olt
+     * @param OLT $olt
      * @return array
      */
-    public function getPerformanceMetrics(OltDevice $olt): array;
+    public function getPerformanceMetrics(OLT $olt): array;
 
     /**
      * Discover new ONUs
      *
-     * @param OltDevice $olt
+     * @param OLT $olt
      * @return array
      */
-    public function discoverOnus(OltDevice $olt): array;
+    public function discoverOnus(OLT $olt): array;
 
     /**
      * Add ONU to whitelist
      *
-     * @param OltDevice $olt
+     * @param OLT $olt
      * @param array $onuData
      * @return bool
      */
-    public function addOnuToWhitelist(OltDevice $olt, array $onuData): bool;
+    public function addOnuToWhitelist(OLT $olt, array $onuData): bool;
 
     /**
      * Remove ONU from whitelist
      *
-     * @param OltDevice $olt
+     * @param OLT $olt
      * @param Onu $onu
      * @return bool
      */
-    public function removeOnuFromWhitelist(OltDevice $olt, Onu $onu): bool;
+    public function removeOnuFromWhitelist(OLT $olt, Onu $onu): bool;
 
     /**
      * Get vendor-specific OID mappings
@@ -163,10 +163,10 @@ interface VendorDriverInterface
     /**
      * Validate OLT connection
      *
-     * @param OltDevice $olt
+     * @param OLT $olt
      * @return bool
      */
-    public function validateConnection(OltDevice $olt): bool;
+    public function validateConnection(OLT $olt): bool;
 
     /**
      * Get vendor name

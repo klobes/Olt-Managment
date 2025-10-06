@@ -144,7 +144,7 @@ class OnuService
                 throw new \Exception("OLT not found");
             }
 
-            $device = OltDevice::where('ip_address', $olt->ip_address)->first();
+            $device = OLT::where('ip_address', $olt->ip_address)->first();
             
             if (!$device) {
                 throw new \Exception("Device not found");
@@ -276,7 +276,7 @@ class OnuService
         return true;
     }
 
-    private function getRxPower(OltDevice $device, Onu $Onu): ?float
+    private function getRxPower(OLT $device, Onu $Onu): ?float
     {
         // SNMP OID for RX power based on slot/port/Onu_id
         $oid = "1.3.6.1.4.1.5875.800.3.9.1.5.1.{$Onu->slot}.{$Onu->port}.{$Onu->Onu_id}";
@@ -284,7 +284,7 @@ class OnuService
         return is_numeric($power) ? (float) $power : null;
     }
 
-    private function getTxPower(OltDevice $device, Onu $Onu): ?float
+    private function getTxPower(OLT $device, Onu $Onu): ?float
     {
         // SNMP OID for TX power based on slot/port/Onu_id
         $oid = "1.3.6.1.4.1.5875.800.3.9.1.5.2.{$Onu->slot}.{$Onu->port}.{$Onu->Onu_id}";
@@ -292,7 +292,7 @@ class OnuService
         return is_numeric($power) ? (float) $power : null;
     }
 
-    private function getTemperature(OltDevice $device, Onu $Onu): ?float
+    private function getTemperature(OLT $device, Onu $Onu): ?float
     {
         // SNMP OID for temperature based on slot/port/Onu_id
         $oid = "1.3.6.1.4.1.5875.800.3.9.1.5.3.{$Onu->slot}.{$Onu->port}.{$Onu->Onu_id}";
@@ -300,7 +300,7 @@ class OnuService
         return is_numeric($temp) ? (float) $temp : null;
     }
 
-    private function getVoltage(OltDevice $device, Onu $Onu): ?float
+    private function getVoltage(OLT $device, Onu $Onu): ?float
     {
         // SNMP OID for voltage based on slot/port/Onu_id
         $oid = "1.3.6.1.4.1.5875.800.3.9.1.5.4.{$Onu->slot}.{$Onu->port}.{$Onu->Onu_id}";
@@ -308,7 +308,7 @@ class OnuService
         return is_numeric($voltage) ? (float) $voltage : null;
     }
 
-    private function getDistance(OltDevice $device, Onu $Onu): ?float
+    private function getDistance(OLT $device, Onu $Onu): ?float
     {
         // SNMP OID for distance based on slot/port/Onu_id
         $oid = "1.3.6.1.4.1.5875.800.3.9.1.5.5.{$Onu->slot}.{$Onu->port}.{$Onu->Onu_id}";
@@ -316,7 +316,7 @@ class OnuService
         return is_numeric($distance) ? (float) $distance : null;
     }
 
-    private function getStatus(OltDevice $device, Onu $Onu): string
+    private function getStatus(OLT $device, Onu $Onu): string
     {
         // SNMP OID for Onu status based on slot/port/Onu_id
         $oid = "1.3.6.1.4.1.5875.800.3.9.1.5.6.{$Onu->slot}.{$Onu->port}.{$Onu->Onu_id}";

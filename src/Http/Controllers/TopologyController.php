@@ -136,7 +136,7 @@ class TopologyController extends BaseController
                 'equipment' => $source,
             ];
 
-            if ($currentSegment->source_type === 'OltDevice') {
+            if ($currentSegment->source_type === 'OLT') {
                 break;
             }
 
@@ -227,7 +227,7 @@ class TopologyController extends BaseController
     private function getEquipment(string $type, int $id): ?object
     {
         switch ($type) {
-            case 'OltDevice':
+            case 'OLT':
                 return OLT::find($id);
             case 'JunctionBox':
                 return JunctionBox::find($id);

@@ -2,7 +2,7 @@
 
 namespace Botble\FiberhomeOltManager\Jobs;
 
-use Botble\FiberhomeOltManager\Models\OltDevice;
+use Botble\FiberhomeOltManager\Models\OLT;
 use Botble\FiberhomeOltManager\Models\Onu;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;

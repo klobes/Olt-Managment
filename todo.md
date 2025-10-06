@@ -1,55 +1,58 @@
 # OLT Management Consolidation Todo
 
 ## Phase 1: Preparation & Backup
-- [ ] Create backup branch
-- [ ] Create working branch
-- [ ] Document current state
+- [x] Create backup branch
+- [x] Create working branch
+- [x] Document current state
 
 ## Phase 2: Model Consolidation
-- [ ] Update OLT model with all required fields
+- [x] Update OLT model with all required fields
 - [ ] Delete OltDevice.php model
-- [ ] Verify OLT model completeness
+- [x] Verify OLT model completeness
 
 ## Phase 3: Controller Consolidation
-- [ ] Review and merge OltDeviceController methods into OLTController
-- [ ] Rename OLTController to OltController (Laravel convention)
-- [ ] Delete OltDeviceController.php
-- [ ] Verify all CRUD methods exist
+- [x] Review and merge OltDeviceController methods into OLTController
+- [x] Rename OLTController to OltController (Laravel convention)
+- [ ] Delete OltDeviceController.php and old OLTController.php
+- [x] Verify all CRUD methods exist
 
 ## Phase 4: Service Updates
-- [ ] Update OltConfigurationService.php imports
-- [ ] Update OltDataCollector.php imports
-- [ ] Update SnmpManager.php imports
-- [ ] Update VendorService.php imports
-- [ ] Update VendorDriverInterface.php imports
-- [ ] Update AbstractVendorDriver.php imports
-- [ ] Update FiberhomeDriver.php imports
-- [ ] Update HuaweiDriver.php imports
-- [ ] Update ZteDriver.php imports
-- [ ] Update PollOltJob.php imports
-- [ ] Update DiscoverOnuJob.php imports
-- [ ] Update SendAlertJob.php imports
-- [ ] Clean up DiscoveryService.php (remove dual usage)
-- [ ] Clean up OLTService.php (remove dual usage)
+- [x] Update OltConfigurationService.php imports
+- [x] Update OltDataCollector.php imports
+- [x] Update SnmpManager.php imports
+- [x] Update VendorService.php imports
+- [x] Update VendorDriverInterface.php imports
+- [x] Update AbstractVendorDriver.php imports
+- [x] Update FiberhomeDriver.php imports
+- [x] Update HuaweiDriver.php imports
+- [x] Update ZteDriver.php imports
+- [x] Update PollOltJob.php imports
+- [x] Update DiscoverOnuJob.php imports
+- [x] Update SendAlertJob.php imports
+- [x] Clean up DiscoveryService.php (remove dual usage)
+- [x] Clean up OLTService.php (remove dual usage)
 
 ## Phase 5: Route Updates
-- [ ] Update web.php routes to use OltController
-- [ ] Update api.php routes to use OltController
-- [ ] Verify all route references
+- [x] Update web.php routes to use OltController
+- [x] Update api.php routes to use OltController
+- [x] Verify all route references
 
 ## Phase 6: Database Cleanup
-- [ ] Delete create_olt_devices_table.php migration
-- [ ] Update foreign keys in create_olt_cards_table.php
-- [ ] Update foreign keys in create_olt_pon_ports_table.php
-- [ ] Update foreign keys in create_olt_performance_logs_table.php
+- [x] Delete create_olt_devices_table.php migration
+- [x] Update foreign keys in create_olt_cards_table.php (already correct)
+- [x] Update foreign keys in create_olt_pon_ports_table.php (already correct)
+- [x] Update foreign keys in create_olt_performance_logs_table.php (already correct)
 
 ## Phase 7: View & Frontend Updates
-- [ ] Update view route references if needed
-- [ ] Update JavaScript API endpoints if needed
+- [x] Update view route references if needed
+- [x] Update JavaScript API endpoints if needed
+- [x] Update model relationships (BandwidthProfile, OltCard, OltPerformanceLog, OltPonPort, Onu)
+- [x] Update TopologyController references
+- [x] Update migration comments
 - [ ] Verify frontend functionality
 
 ## Phase 8: Table & DataTable Updates
-- [ ] Delete OltDeviceTable.php
+- [x] Delete OltDeviceTable.php
 - [ ] Verify DataTable functionality
 
 ## Phase 9: Testing

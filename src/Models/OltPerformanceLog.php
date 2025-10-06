@@ -26,8 +26,8 @@ class OltPerformanceLog extends BaseModel
         'recorded_at' => 'datetime',
     ];
 
-    public function oltDevice(): BelongsTo
+    public function olt(): BelongsTo
     {
-        return $this->belongsTo(OltDevice::class);
+        return $this->belongsTo(OLT::class, 'olt_id');
     }
 }

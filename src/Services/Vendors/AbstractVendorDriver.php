@@ -2,7 +2,7 @@
 
 namespace Botble\FiberhomeOltManager\Services\Vendors;
 
-use Botble\FiberhomeOltManager\Models\OltDevice;
+use Botble\FiberhomeOltManager\Models\OLT;
 use Botble\FiberhomeOltManager\Services\SNMPService;
 use Illuminate\Support\Facades\Log;
 
@@ -42,10 +42,10 @@ abstract class AbstractVendorDriver implements VendorDriverInterface
     /**
      * Validate OLT connection
      *
-     * @param OltDevice $olt
+     * @param OLT $olt
      * @return bool
      */
-    public function validateConnection(OltDevice $olt): bool
+    public function validateConnection(OLT $olt): bool
     {
         try {
             $result = $this->snmpService->get(
@@ -64,10 +64,10 @@ abstract class AbstractVendorDriver implements VendorDriverInterface
     /**
      * Get system information from OLT
      *
-     * @param OltDevice $olt
+     * @param OLT $olt
      * @return array
      */
-    public function getSystemInfo(OltDevice $olt): array
+    public function getSystemInfo(OLT $olt): array
     {
         try {
             $systemOids = $this->oidMappings['system'] ?? [];
@@ -88,10 +88,10 @@ abstract class AbstractVendorDriver implements VendorDriverInterface
     /**
      * Get performance metrics
      *
-     * @param OltDevice $olt
+     * @param OLT $olt
      * @return array
      */
-    public function getPerformanceMetrics(OltDevice $olt): array
+    public function getPerformanceMetrics(OLT $olt): array
     {
         try {
             $performanceOids = $this->oidMappings['performance'] ?? [];

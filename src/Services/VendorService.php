@@ -4,7 +4,7 @@ namespace Botble\FiberhomeOltManager\Services;
 
 use Botble\FiberhomeOltManager\Models\VendorConfiguration;
 use Botble\FiberhomeOltManager\Models\OnuType;
-use Botble\FiberhomeOltManager\Models\OltDevice;
+use Botble\FiberhomeOltManager\Models\OLT;
 use Botble\FiberhomeOltManager\Services\Vendors\VendorDriverInterface;
 use Botble\FiberhomeOltManager\Services\Vendors\FiberhomeDriver;
 use Botble\FiberhomeOltManager\Services\Vendors\HuaweiDriver;
@@ -50,7 +50,7 @@ class VendorService
     /**
      * Get driver for OLT device
      */
-    public function getDriver(OltDevice $olt): VendorDriverInterface
+    public function getDriver(OLT $olt): VendorDriverInterface
     {
         $vendor = $olt->vendor;
         
@@ -64,7 +64,7 @@ class VendorService
     /**
      * Execute vendor-specific command
      */
-    public function executeCommand(OltDevice $olt, string $method, array $params = [])
+    public function executeCommand(OLT $olt, string $method, array $params = [])
     {
         try {
             $driver = $this->getDriver($olt);

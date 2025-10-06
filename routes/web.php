@@ -3,7 +3,7 @@
 use Botble\Base\Facades\AdminHelper;
 use Illuminate\Support\Facades\Route;
 use Botble\FiberhomeOltManager\Http\Controllers\DashboardController;
-use Botble\FiberhomeOltManager\Http\Controllers\OltDeviceController;
+use Botble\FiberhomeOltManager\Http\Controllers\OltController;
 use Botble\FiberhomeOltManager\Http\Controllers\OnuController;
 use Botble\FiberhomeOltManager\Http\Controllers\BandwidthProfileController;
 
@@ -30,15 +30,15 @@ AdminHelper::registerRoutes(function () {
         
         // OLT Devices
         Route::group(['prefix' => 'devices', 'as' => 'devices.'], function () {
-            Route::get('/', [OltDeviceController::class, 'index'])->name('index');
-            Route::get('create', [OltDeviceController::class, 'create'])->name('create');
-            Route::post('create', [OltDeviceController::class, 'store'])->name('store');
-            Route::get('{id}', [OltDeviceController::class, 'show'])->name('show');
-            Route::get('{id}/edit', [OltDeviceController::class, 'edit'])->name('edit');
-            Route::put('{id}', [OltDeviceController::class, 'update'])->name('update');
-            Route::delete('{id}', [OltDeviceController::class, 'destroy'])->name('destroy');
-            Route::post('{id}/sync', [OltDeviceController::class, 'sync'])->name('sync');
-            Route::post('{id}/test-connection', [OltDeviceController::class, 'testConnection'])->name('test-connection');
+            Route::get('/', [OltController::class, 'index'])->name('index');
+            Route::get('create', [OltController::class, 'create'])->name('create');
+            Route::post('create', [OltController::class, 'store'])->name('store');
+            Route::get('{id}', [OltController::class, 'show'])->name('show');
+            Route::get('{id}/edit', [OltController::class, 'edit'])->name('edit');
+            Route::put('{id}', [OltController::class, 'update'])->name('update');
+            Route::delete('{id}', [OltController::class, 'destroy'])->name('destroy');
+            Route::post('{id}/sync', [OltController::class, 'sync'])->name('sync');
+            Route::post('{id}/test-connection', [OltController::class, 'testConnection'])->name('test-connection');
         });
         
         // ONUs
@@ -67,7 +67,7 @@ AdminHelper::registerRoutes(function () {
         
         // DataTables Routes
         Route::group(['prefix' => 'datatables', 'as' => 'datatables.'], function () {
-            Route::post('devices', [OltDeviceController::class, 'getTable'])->name('devices.table');
+            Route::post('devices', [OltController::class, 'getTable'])->name('devices.table');
             Route::post('onus', [OnuController::class, 'getTable'])->name('onus.table');
             Route::post('bandwidth-profiles', [BandwidthProfileController::class, 'getTable'])->name('bandwidth-profiles.table');
         });

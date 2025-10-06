@@ -3,7 +3,7 @@
 namespace Botble\FiberHomeOLTManager\Services;
 
 use Botble\FiberHomeOLTManager\Models\OLT;
-use Botble\FiberHomeOLTManager\Models\OltDevice;
+
 use Botble\FiberHomeOLTManager\Services\SnmpManager;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -86,7 +86,7 @@ class OLTService
     public function pollOLT(OLT $olt): array
     {
         try {
-            $device = OltDevice::where('ip_address', $olt->ip_address)->first();
+            $device = OLT::where('ip_address', $olt->ip_address)->first();
             
             if (!$device) {
                 throw new \Exception("Device not found for IP: {$olt->ip_address}");
@@ -126,7 +126,7 @@ class OLTService
     public function discoverONUs(OLT $olt): array
     {
         try {
-            $device = OltDevice::where('ip_address', $olt->ip_address)->first();
+            $device = OLT::where('ip_address', $olt->ip_address)->first();
             
             if (!$device) {
                 throw new \Exception("Device not found");
@@ -220,35 +220,35 @@ class OLTService
         }
     }
 
-    private function getCpuUsage(OltDevice $device): float
+    private function getCpuUsage(OLT $device): float
     {
         // SNMP OID for CPU usage (example)
         $cpu = $this->snmpManager->get($device, '1.3.6.1.4.1.5875.800.3.9.1.1.1.0');
         return is_numeric($cpu) ? (float) $cpu : 0;
     }
 
-    private function getMemoryUsage(OltDevice $device): float
+    private function getMemoryUsage(OLT $device): float
     {
         // SNMP OID for memory usage (example)
         $memory = $this->snmpManager->get($device, '1.3.6.1.4.1.5875.800.3.9.1.2.1.0');
         return is_numeric($memory) ? (float) $memory : 0;
     }
 
-    private function getTemperature(OltDevice $device): ?float
+    private function getTemperature(OLT $device): ?float
     {
         // SNMP OID for temperature (example)
         $temp = $this->snmpManager->get($device, '1.3.6.1.4.1.5875.800.3.9.1.3.1.0');
         return is_numeric($temp) ? (float) $temp : null;
     }
 
-    private function getUptime(OltDevice $device): int
+    private function getUptime(OLT $device): int
     {
         // SNMP OID for uptime (example)
         $uptime = $this->snmpManager->get($device, '1.3.6.1.2.1.1.3.0');
         return is_numeric($uptime) ? (int) $uptime : 0;
     }
 
-    private function getStatus(OltDevice $device): string
+    private function getStatus(OLT $device): string
     {
         try {
             $response = $this->snmpManager->get($device, '1.3.6.1.2.1.1.1.0');
@@ -258,13 +258,13 @@ class OLTService
         }
     }
 
-    private function discoverAN5516ONUs(OltDevice $device): array
+    private function discoverAN5516ONUs(OLT $device): array
     {
         // Implementation for AN5516 ONU discovery
         return [];
     }
 
-    private function discoverAN6000ONUs(OltDevice $device): array
+    private function discoverAN6000ONUs(OLT $device): array
     {
         // Implementation for AN6000 ONU discovery
         return [];

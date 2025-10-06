@@ -2,7 +2,7 @@
 
 namespace Botble\FiberHomeOLTManager\Services;
 
-use Botble\FiberHomeOLTManager\Models\OltDevice;
+use Botble\FiberhomeOltManager\Models\OLT;
 use Exception;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -19,7 +19,7 @@ class SnmpManager
     /**
      * Get SNMP value from OLT
      */
-    public function get(OltDevice $olt, string $oid): mixed
+    public function get(OLT $olt, string $oid): mixed
     {
         try {
             $cacheKey = $this->getCacheKey($olt, $oid);
@@ -40,7 +40,7 @@ class SnmpManager
     /**
      * Walk SNMP tree from OLT
      */
-    public function walk(OltDevice $olt, string $oid): array
+    public function walk(OLT $olt, string $oid): array
     {
         try {
             $cacheKey = $this->getCacheKey($olt, $oid . '_walk');
@@ -61,7 +61,7 @@ class SnmpManager
     /**
      * Set SNMP value on OLT
      */
-    public function set(OltDevice $olt, string $oid, string $type, mixed $value): bool
+    public function set(OLT $olt, string $oid, string $type, mixed $value): bool
     {
         try {
             $result = $this->performSnmpSet($olt, $oid, $type, $value);
@@ -81,7 +81,7 @@ class SnmpManager
     /**
      * Perform actual SNMP GET operation
      */
-    protected function performSnmpGet(OltDevice $olt, string $oid): mixed
+    protected function performSnmpGet(OLT $olt, string $oid): mixed
     {
         $session = $this->createSnmpSession($olt);
         
@@ -107,7 +107,7 @@ class SnmpManager
     /**
      * Perform actual SNMP WALK operation
      */
-    protected function performSnmpWalk(OltDevice $olt, string $oid): array
+    protected function performSnmpWalk(OLT $olt, string $oid): array
     {
         if ($olt->snmp_version === '2c') {
             $result = @snmp2_real_walk(
@@ -133,7 +133,7 @@ class SnmpManager
     /**
      * Perform actual SNMP SET operation
      */
-    protected function performSnmpSet(OltDevice $olt, string $oid, string $type, mixed $value): bool
+    protected function performSnmpSet(OLT $olt, string $oid, string $type, mixed $value): bool
     {
         if ($olt->snmp_version === '2c') {
             return @snmp2_set(
@@ -161,7 +161,7 @@ class SnmpManager
     /**
      * Create SNMP session
      */
-    protected function createSnmpSession(OltDevice $olt): void
+    protected function createSnmpSession(OLT $olt): void
     {
         snmp_set_quick_print(true);
         snmp_set_oid_output_format(SNMP_OID_OUTPUT_NUMERIC);
@@ -171,7 +171,7 @@ class SnmpManager
     /**
      * Generate cache key
      */
-    protected function getCacheKey(OltDevice $olt, string $oid): string
+    protected function getCacheKey(OLT $olt, string $oid): string
     {
         return $this->config['cache']['prefix'] . $olt->id . '_' . md5($oid);
     }
@@ -179,7 +179,7 @@ class SnmpManager
     /**
      * Clear all cache for an OLT
      */
-    public function clearCache(OltDevice $olt): void
+    public function clearCache(OLT $olt): void
     {
         if (!$this->config['cache']['enabled']) {
             return;
@@ -192,7 +192,7 @@ class SnmpManager
     /**
      * Test SNMP connection to OLT
      */
-    public function testConnection(OltDevice $olt): bool
+    public function testConnection(OLT $olt): bool
     {
         try {
             $result = $this->get($olt, '1.3.6.1.2.1.1.1.0'); // sysDescr

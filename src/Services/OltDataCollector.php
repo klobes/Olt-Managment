@@ -2,7 +2,7 @@
 
 namespace Botble\FiberhomeOltManager\Services;
 
-use Botble\FiberhomeOltManager\Models\OltDevice;
+use Botble\FiberhomeOltManager\Models\OLT;
 use Botble\FiberhomeOltManager\Models\OltCard;
 use Botble\FiberhomeOltManager\Models\OltPonPort;
 use Botble\FiberhomeOltManager\Models\Onu;
@@ -24,7 +24,7 @@ class OltDataCollector
     /**
      * Collect all data from OLT
      */
-    public function collectAll(OltDevice $olt): bool
+    public function collectAll(OLT $olt): bool
     {
         try {
             $this->collectSystemInfo($olt);
@@ -51,7 +51,7 @@ class OltDataCollector
     /**
      * Collect system information
      */
-    public function collectSystemInfo(OltDevice $olt): void
+    public function collectSystemInfo(OLT $olt): void
     {
         $frameOid = $this->oids['system_info']['frame'];
         $frames = $this->snmp->walk($olt, $frameOid);
@@ -67,7 +67,7 @@ class OltDataCollector
     /**
      * Collect card information
      */
-    public function collectCards(OltDevice $olt): void
+    public function collectCards(OLT $olt): void
     {
         $cardOid = $this->oids['system_info']['card'];
         $cards = $this->snmp->walk($olt, $cardOid);
@@ -88,7 +88,7 @@ class OltDataCollector
     /**
      * Collect PON port information
      */
-    public function collectPonPorts(OltDevice $olt): void
+    public function collectPonPorts(OLT $olt): void
     {
         $ponOid = $this->oids['system_info']['olt_pon'];
         $pons = $this->snmp->walk($olt, $ponOid);
@@ -109,7 +109,7 @@ class OltDataCollector
     /**
      * Collect ONU information
      */
-    public function collectOnus(OltDevice $olt): void
+    public function collectOnus(OLT $olt): void
     {
         $onuOid = $this->oids['system_info']['onu_pon'];
         $onus = $this->snmp->walk($olt, $onuOid);
@@ -137,7 +137,7 @@ class OltDataCollector
     /**
      * Collect performance data
      */
-    public function collectPerformance(OltDevice $olt): void
+    public function collectPerformance(OLT $olt): void
     {
         $cpuOid = $this->oids['performance']['cpu'];
         $memOid = $this->oids['performance']['memory'];

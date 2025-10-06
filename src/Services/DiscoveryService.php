@@ -5,7 +5,7 @@ namespace Botble\FiberHomeOLTManager\Services;
 
 use Botble\FiberHomeOLTManager\Models\OLT;
 use Botble\FiberHomeOLTManager\Models\Onu as ONU;
-use Botble\FiberHomeOLTManager\Models\OltDevice;
+
 use Botble\FiberHomeOLTManager\Services\SnmpManager;
 use Illuminate\Support\Facades\Log;
 
@@ -24,7 +24,7 @@ class DiscoveryService
     public function discoverONUs(OLT $olt): array
     {
         try {
-            $device = OltDevice::where('ip_address', $olt->ip_address)->first();
+            $device = OLT::where('ip_address', $olt->ip_address)->first();
             
             if (!$device) {
                 throw new \Exception("Device not found for OLT: {$olt->name}");
@@ -46,7 +46,7 @@ class DiscoveryService
     /**
      * Discover ONUs on AN5516 OLT
      */
-    protected function discoverAN5516ONUs(OltDevice $device, OLT $olt): array
+    protected function discoverAN5516ONUs(OLT $device, OLT $olt): array
     {
         $discoveredONUs = [];
 
@@ -84,7 +84,7 @@ class DiscoveryService
     /**
      * Discover ONUs on AN6000 OLT
      */
-    protected function discoverAN6000ONUs(OltDevice $device, OLT $olt): array
+    protected function discoverAN6000ONUs(OLT $device, OLT $olt): array
     {
         $discoveredONUs = [];
 
@@ -181,7 +181,7 @@ class DiscoveryService
         foreach ($ips as $ip) {
             try {
                 // Try to connect via SNMP
-                $device = new OltDevice([
+                $device = new OLT([
                     'ip_address' => $ip,
                     'snmp_community' => setting('fiberhome_default_snmp_community', 'public'),
                     'snmp_version' => setting('fiberhome_default_snmp_version', '2c'),

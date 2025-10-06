@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Botble\FiberhomeOltManager\Http\Controllers\OltDeviceController;
+use Botble\FiberhomeOltManager\Http\Controllers\OltController;
 use Botble\FiberhomeOltManager\Http\Controllers\ONUController;
 use Botble\FiberhomeOltManager\Http\Controllers\BandwidthProfileController;
 use Botble\FiberhomeOltManager\Http\Controllers\DashboardController;
@@ -28,15 +28,15 @@ Route::group([
     
     // OLT Device API
     Route::group(['prefix' => 'devices', 'as' => 'devices.'], function () {
-        Route::get('/', [OltDeviceController::class, 'index'])->name('index');
-        Route::post('/', [OltDeviceController::class, 'store'])->name('store');
-        Route::post('test-connection', [OltDeviceController::class, 'testConnection'])->name('test-connection');
-        Route::get('{id}', [OltDeviceController::class, 'getDetails'])->name('show');
-        Route::put('{id}', [OltDeviceController::class, 'update'])->name('update');
-        Route::delete('{id}', [OltDeviceController::class, 'destroy'])->name('destroy');
-        Route::post('{id}/sync', [OltDeviceController::class, 'sync'])->name('sync');
-        Route::post('{id}/test-connection', [OltDeviceController::class, 'testConnection'])->name('test-connection-existing');
-        Route::post('datatable', [OltDeviceController::class, 'getTable'])->name('datatable');
+        Route::get('/', [OltController::class, 'index'])->name('index');
+        Route::post('/', [OltController::class, 'store'])->name('store');
+        Route::post('test-connection', [OltController::class, 'testConnection'])->name('test-connection');
+        Route::get('{id}', [OltController::class, 'getDetails'])->name('show');
+        Route::put('{id}', [OltController::class, 'update'])->name('update');
+        Route::delete('{id}', [OltController::class, 'destroy'])->name('destroy');
+        Route::post('{id}/sync', [OltController::class, 'sync'])->name('sync');
+        Route::post('{id}/test-connection', [OltController::class, 'testConnection'])->name('test-connection-existing');
+        Route::post('datatable', [OltController::class, 'getTable'])->name('datatable');
     });
     
     // ONU API

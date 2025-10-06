@@ -2,7 +2,7 @@
 
 namespace Botble\FiberhomeOltManager\Services\Vendors;
 
-use Botble\FiberhomeOltManager\Models\OltDevice;
+use Botble\FiberhomeOltManager\Models\OLT;
 use Botble\FiberhomeOltManager\Models\Onu;
 
 /**
@@ -83,10 +83,10 @@ class HuaweiDriver extends AbstractVendorDriver
     /**
      * Get all cards/slots information
      *
-     * @param OltDevice $olt
+     * @param OLT $olt
      * @return array
      */
-    public function getCards(OltDevice $olt): array
+    public function getCards(OLT $olt): array
     {
         try {
             $cards = [];
@@ -118,10 +118,10 @@ class HuaweiDriver extends AbstractVendorDriver
     /**
      * Get all PON ports information
      *
-     * @param OltDevice $olt
+     * @param OLT $olt
      * @return array
      */
-    public function getPonPorts(OltDevice $olt): array
+    public function getPonPorts(OLT $olt): array
     {
         try {
             $ports = [];
@@ -152,10 +152,10 @@ class HuaweiDriver extends AbstractVendorDriver
     /**
      * Get all ONUs from OLT
      *
-     * @param OltDevice $olt
+     * @param OLT $olt
      * @return array
      */
-    public function getOnus(OltDevice $olt): array
+    public function getOnus(OLT $olt): array
     {
         try {
             $onus = [];
@@ -190,11 +190,11 @@ class HuaweiDriver extends AbstractVendorDriver
     /**
      * Get specific ONU information
      *
-     * @param OltDevice $olt
+     * @param OLT $olt
      * @param string $onuId
      * @return array
      */
-    public function getOnuInfo(OltDevice $olt, string $onuId): array
+    public function getOnuInfo(OLT $olt, string $onuId): array
     {
         try {
             return [
@@ -214,11 +214,11 @@ class HuaweiDriver extends AbstractVendorDriver
     /**
      * Get ONU optical power (RX/TX)
      *
-     * @param OltDevice $olt
+     * @param OLT $olt
      * @param string $onuId
      * @return array
      */
-    public function getOnuOpticalPower(OltDevice $olt, string $onuId): array
+    public function getOnuOpticalPower(OLT $olt, string $onuId): array
     {
         try {
             return [
@@ -234,11 +234,11 @@ class HuaweiDriver extends AbstractVendorDriver
     /**
      * Get ONU distance
      *
-     * @param OltDevice $olt
+     * @param OLT $olt
      * @param string $onuId
      * @return float
      */
-    public function getOnuDistance(OltDevice $olt, string $onuId): float
+    public function getOnuDistance(OLT $olt, string $onuId): float
     {
         try {
             $distance = $this->snmpService->get($olt->ip_address, $olt->snmp_community, $this->oidMappings['onu']['onuDistance'] . '.' . $onuId);
@@ -252,11 +252,11 @@ class HuaweiDriver extends AbstractVendorDriver
     /**
      * Enable ONU
      *
-     * @param OltDevice $olt
+     * @param OLT $olt
      * @param Onu $onu
      * @return bool
      */
-    public function enableOnu(OltDevice $olt, Onu $onu): bool
+    public function enableOnu(OLT $olt, Onu $onu): bool
     {
         try {
             // Huawei specific enable command
@@ -279,11 +279,11 @@ class HuaweiDriver extends AbstractVendorDriver
     /**
      * Disable ONU
      *
-     * @param OltDevice $olt
+     * @param OLT $olt
      * @param Onu $onu
      * @return bool
      */
-    public function disableOnu(OltDevice $olt, Onu $onu): bool
+    public function disableOnu(OLT $olt, Onu $onu): bool
     {
         try {
             $result = $this->snmpService->set(
@@ -305,11 +305,11 @@ class HuaweiDriver extends AbstractVendorDriver
     /**
      * Reboot ONU
      *
-     * @param OltDevice $olt
+     * @param OLT $olt
      * @param Onu $onu
      * @return bool
      */
-    public function rebootOnu(OltDevice $olt, Onu $onu): bool
+    public function rebootOnu(OLT $olt, Onu $onu): bool
     {
         try {
             // Huawei ONU reboot: disable then enable
@@ -328,12 +328,12 @@ class HuaweiDriver extends AbstractVendorDriver
     /**
      * Configure ONU bandwidth profile
      *
-     * @param OltDevice $olt
+     * @param OLT $olt
      * @param Onu $onu
      * @param array $profile
      * @return bool
      */
-    public function configureBandwidth(OltDevice $olt, Onu $onu, array $profile): bool
+    public function configureBandwidth(OLT $olt, Onu $onu, array $profile): bool
     {
         try {
             $result = $this->snmpService->set(
@@ -355,12 +355,12 @@ class HuaweiDriver extends AbstractVendorDriver
     /**
      * Configure ONU VLAN
      *
-     * @param OltDevice $olt
+     * @param OLT $olt
      * @param Onu $onu
      * @param array $vlanConfig
      * @return bool
      */
-    public function configureVlan(OltDevice $olt, Onu $onu, array $vlanConfig): bool
+    public function configureVlan(OLT $olt, Onu $onu, array $vlanConfig): bool
     {
         try {
             $result = $this->snmpService->set(
@@ -382,10 +382,10 @@ class HuaweiDriver extends AbstractVendorDriver
     /**
      * Discover new ONUs
      *
-     * @param OltDevice $olt
+     * @param OLT $olt
      * @return array
      */
-    public function discoverOnus(OltDevice $olt): array
+    public function discoverOnus(OLT $olt): array
     {
         try {
             $allOnus = $this->getOnus($olt);
@@ -408,11 +408,11 @@ class HuaweiDriver extends AbstractVendorDriver
     /**
      * Add ONU to whitelist
      *
-     * @param OltDevice $olt
+     * @param OLT $olt
      * @param array $onuData
      * @return bool
      */
-    public function addOnuToWhitelist(OltDevice $olt, array $onuData): bool
+    public function addOnuToWhitelist(OLT $olt, array $onuData): bool
     {
         try {
             // Huawei uses service profile for authorization
@@ -435,11 +435,11 @@ class HuaweiDriver extends AbstractVendorDriver
     /**
      * Remove ONU from whitelist
      *
-     * @param OltDevice $olt
+     * @param OLT $olt
      * @param Onu $onu
      * @return bool
      */
-    public function removeOnuFromWhitelist(OltDevice $olt, Onu $onu): bool
+    public function removeOnuFromWhitelist(OLT $olt, Onu $onu): bool
     {
         try {
             $result = $this->snmpService->set(

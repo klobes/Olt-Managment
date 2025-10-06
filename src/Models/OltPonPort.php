@@ -41,9 +41,9 @@ class OltPonPort extends BaseModel
         'auth_onu_num' => 'integer',
     ];
 
-    public function oltDevice(): BelongsTo
+    public function olt(): BelongsTo
     {
-        return $this->belongsTo(OltDevice::class);
+        return $this->belongsTo(OLT::class, 'olt_id');
     }
 
     public function oltCard(): BelongsTo

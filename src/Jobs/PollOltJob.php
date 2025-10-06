@@ -2,7 +2,7 @@
 
 namespace Botble\FiberhomeOltManager\Jobs;
 
-use Botble\FiberhomeOltManager\Models\OltDevice;
+use Botble\FiberhomeOltManager\Models\OLT;
 use Botble\FiberhomeOltManager\Services\OLTService;
 use Botble\FiberhomeOltManager\Services\VendorService;
 use Illuminate\Bus\Queueable;
@@ -25,7 +25,7 @@ class PollOltJob implements ShouldQueue
     /**
      * The OLT device to poll
      *
-     * @var OltDevice
+     * @var OLT
      */
     protected $oltDevice;
 
@@ -46,9 +46,9 @@ class PollOltJob implements ShouldQueue
     /**
      * Create a new job instance.
      *
-     * @param OltDevice $oltDevice
+     * @param OLT $oltDevice
      */
-    public function __construct(OltDevice $oltDevice)
+    public function __construct(OLT $oltDevice)
     {
         $this->oltDevice = $oltDevice;
     }

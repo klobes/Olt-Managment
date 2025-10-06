@@ -56,12 +56,12 @@
         },
 
         init: function() {
-            this.initOltDevicesTable();
+            this.initOltTable();
             this.initOnuTable();
             this.initBandwidthProfilesTable();
         },
 
-        initOltDevicesTable: function() {
+        initOltTable: function() {
             if (!$('#oltDevicesTable').length) return;
 
             $('#oltDevicesTable').DataTable($.extend({}, this.defaultOptions, {

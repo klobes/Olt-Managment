@@ -2,7 +2,7 @@
 
 namespace Botble\FiberhomeOltManager\Services;
 
-use Botble\FiberhomeOltManager\Models\OltDevice;
+use Botble\FiberhomeOltManager\Models\OLT;
 use Botble\FiberhomeOltManager\Models\Onu;
 use Botble\FiberhomeOltManager\Models\BandwidthProfile;
 use Illuminate\Support\Facades\Log;
@@ -21,7 +21,7 @@ class OltConfigurationService
     /**
      * Add ONU to whitelist (MAC-based)
      */
-    public function addOnuToWhitelist(OltDevice $olt, array $data): bool
+    public function addOnuToWhitelist(OLT $olt, array $data): bool
     {
         try {
             $baseOid = $this->oids['onu_whitelist']['physical'];
@@ -53,7 +53,7 @@ class OltConfigurationService
     /**
      * Remove ONU from whitelist
      */
-    public function removeOnuFromWhitelist(OltDevice $olt, int $authNo): bool
+    public function removeOnuFromWhitelist(OLT $olt, int $authNo): bool
     {
         try {
             $baseOid = $this->oids['onu_whitelist']['physical'];
@@ -73,7 +73,7 @@ class OltConfigurationService
     /**
      * Enable/Disable PON port
      */
-    public function setPonPortStatus(OltDevice $olt, int $ponIndex, bool $enable): bool
+    public function setPonPortStatus(OLT $olt, int $ponIndex, bool $enable): bool
     {
         try {
             $oid = $this->oids['interface_enable']['olt_pon'] . ".1.{$ponIndex}.1";
@@ -95,7 +95,7 @@ class OltConfigurationService
     /**
      * Enable/Disable ONU data port
      */
-    public function setOnuPortStatus(OltDevice $olt, int $portIndex, bool $enable): bool
+    public function setOnuPortStatus(OLT $olt, int $portIndex, bool $enable): bool
     {
         try {
             $oid = $this->oids['interface_enable']['data_port'] . ".1.{$portIndex}.2";
@@ -116,7 +116,7 @@ class OltConfigurationService
     /**
      * Create bandwidth profile
      */
-    public function createBandwidthProfile(OltDevice $olt, array $data): ?BandwidthProfile
+    public function createBandwidthProfile(OLT $olt, array $data): ?BandwidthProfile
     {
         try {
             $baseOid = $this->oids['bandwidth_profile'];
@@ -171,7 +171,7 @@ class OltConfigurationService
     /**
      * Delete bandwidth profile
      */
-    public function deleteBandwidthProfile(OltDevice $olt, int $profileId): bool
+    public function deleteBandwidthProfile(OLT $olt, int $profileId): bool
     {
         try {
             $baseOid = $this->oids['bandwidth_profile'];
@@ -196,7 +196,7 @@ class OltConfigurationService
     /**
      * Configure service on ONU port
      */
-    public function configureService(OltDevice $olt, int $portIndex, array $data): bool
+    public function configureService(OLT $olt, int $portIndex, array $data): bool
     {
         try {
             $baseOid = $this->oids['service_config'];
@@ -247,7 +247,7 @@ class OltConfigurationService
     /**
      * Get next available auth number
      */
-    protected function getNextAuthNumber(OltDevice $olt): int
+    protected function getNextAuthNumber(OLT $olt): int
     {
         // In production, implement proper logic to get next available number
         // For now, return a random number
@@ -257,7 +257,7 @@ class OltConfigurationService
     /**
      * Get next bandwidth profile ID
      */
-    protected function getNextBandwidthProfileId(OltDevice $olt): int
+    protected function getNextBandwidthProfileId(OLT $olt): int
     {
         $oid = $this->oids['bandwidth_profile'] . '.10.1';
         $nextId = $this->snmp->get($olt, $oid);

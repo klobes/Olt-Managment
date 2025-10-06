@@ -130,7 +130,7 @@ return new class extends Migration
             $table->integer('fiber_number'); // Which fiber in the cable (1-N)
             
             // Source (can be OLT, Junction Box, Splitter, or Cassette)
-            $table->string('source_type'); // OltDevice, JunctionBox, Splitter, SpliceCassette
+            $table->string('source_type'); // OLT, JunctionBox, Splitter, SpliceCassette
             $table->unsignedBigInteger('source_id');
             $table->string('source_port')->nullable(); // Port/connector identifier
             
