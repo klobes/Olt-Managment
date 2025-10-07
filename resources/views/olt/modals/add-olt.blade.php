@@ -18,104 +18,156 @@
                         <span id="connection-message"></span>
                     </div>
                     
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="add-name">{{ trans('plugins/fiberhome-olt-manager::olt.name') }} <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="add-name" name="name" required placeholder="e.g., OLT-Main-01">
-                                <small class="form-text text-muted">Unique name for this OLT device</small>
-                            </div>
+                    <!-- Basic Information -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="fa fa-info-circle"></i> Basic Information</h6>
                         </div>
-                        
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="add-ip">{{ trans('plugins/fiberhome-olt-manager::olt.ip_address') }} <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="add-ip" name="ip_address" required placeholder="192.168.1.100">
-                                <small class="form-text text-muted">IP address of the OLT device</small>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="add-name">{{ trans('plugins/fiberhome-olt-manager::olt.name') }} <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="add-name" name="name" required placeholder="e.g., OLT-Main-01">
+                                        <small class="form-text text-muted">Unique name for this OLT device</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="add-ip">{{ trans('plugins/fiberhome-olt-manager::olt.ip_address') }} <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="add-ip" name="ip_address" required placeholder="192.168.1.100">
+                                        <small class="form-text text-muted">IP address of the OLT device</small>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="add-vendor">{{ trans('plugins/fiberhome-olt-manager::olt.vendor') }} <span class="text-danger">*</span></label>
-                                <select class="form-control" id="add-vendor" name="vendor" required>
-                                    <option value="">{{ trans('plugins/fiberhome-olt-manager::olt.select_vendor') }}</option>
-                                    <option value="fiberhome">FiberHome</option>
-                                    <option value="huawei">Huawei</option>
-                                    <option value="zte">ZTE</option>
-                                </select>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="add-model">{{ trans('plugins/fiberhome-olt-manager::olt.model') }} <span class="text-danger">*</span></label>
-                                <select class="form-control" id="add-model" name="model" required>
-                                    <option value="">{{ trans('plugins/fiberhome-olt-manager::olt.select_model') }}</option>
-                                    <!-- Options will be populated based on vendor selection -->
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label for="add-snmp-version">{{ trans('plugins/fiberhome-olt-manager::olt.snmp_version') }} <span class="text-danger">*</span></label>
-                                <select class="form-control" id="add-snmp-version" name="snmp_version" required>
-                                    <option value="2c" selected>SNMPv2c</option>
-                                    <option value="3">SNMPv3</option>
-                                </select>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label for="add-snmp-community">{{ trans('plugins/fiberhome-olt-manager::olt.snmp_community') }} <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="add-snmp-community" name="snmp_community" value="public" required>
-                                <small class="form-text text-muted">SNMP community string</small>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label for="add-snmp-port">{{ trans('plugins/fiberhome-olt-manager::olt.snmp_port') }}</label>
-                                <input type="number" class="form-control" id="add-snmp-port" name="snmp_port" value="161" min="1" max="65535">
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="add-location">{{ trans('plugins/fiberhome-olt-manager::olt.location') }}</label>
+                                        <input type="text" class="form-control" id="add-location" name="location" placeholder="e.g., Main Office">
+                                        <small class="form-text text-muted">Physical location of the device</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="add-description">{{ trans('plugins/fiberhome-olt-manager::olt.description') }}</label>
+                                        <input type="text" class="form-control" id="add-description" name="description" placeholder="Optional description">
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="add-location">{{ trans('plugins/fiberhome-olt-manager::olt.location') }}</label>
-                                <input type="text" class="form-control" id="add-location" name="location" placeholder="e.g., Data Center A, Rack 5">
-                            </div>
+                    <!-- Vendor & Model Selection -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="fa fa-cog"></i> Device Configuration</h6>
                         </div>
-                        
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="add-description">{{ trans('plugins/fiberhome-olt-manager::olt.description') }}</label>
-                                <textarea class="form-control" id="add-description" name="description" rows="2" placeholder="Optional description"></textarea>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="add-vendor">{{ trans('plugins/fiberhome-olt-manager::olt.vendor') }} <span class="text-danger">*</span></label>
+                                        <select class="form-control" id="add-vendor" name="vendor" required>
+                                            <option value="">{{ trans('plugins/fiberhome-olt-manager::olt.select_vendor') }}</option>
+                                            <option value="fiberhome">FiberHome</option>
+                                            <option value="huawei">Huawei</option>
+                                            <option value="zte">ZTE</option>
+                                        </select>
+                                        <small class="form-text text-muted">Select the OLT manufacturer</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="add-model">{{ trans('plugins/fiberhome-olt-manager::olt.model') }} <span class="text-danger">*</span></label>
+                                        <select class="form-control" id="add-model" name="model" required disabled>
+                                            <option value="">{{ trans('plugins/fiberhome-olt-manager::olt.select_vendor_first') }}</option>
+                                        </select>
+                                        <small class="form-text text-muted">Select the OLT model</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Model Details (shown after model selection) -->
+                            <div id="model-details" class="alert alert-info" style="display: none;">
+                                <h6><i class="fa fa-info-circle"></i> Model Information</h6>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <strong>Description:</strong><br>
+                                        <span id="model-description">-</span>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <strong>Max Ports:</strong><br>
+                                        <span id="model-max-ports">-</span>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <strong>Max ONUs:</strong><br>
+                                        <span id="model-max-onus">-</span>
+                                    </div>
+                                </div>
+                                <div class="mt-2">
+                                    <strong>Technology:</strong><br>
+                                    <span id="model-technology">-</span>
+                                </div>
                             </div>
                         </div>
                     </div>
                     
-                    <!-- Test Connection Button -->
-                    <div class="form-group">
-                        <button type="button" class="btn btn-info btn-block" id="test-connection-btn">
-                            <i class="fa fa-plug"></i> {{ trans('plugins/fiberhome-olt-manager::olt.test_connection') }}
-                        </button>
+                    <!-- SNMP Configuration -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="fa fa-network-wired"></i> SNMP Configuration</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="add-snmp-community">{{ trans('plugins/fiberhome-olt-manager::olt.snmp_community') }} <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="add-snmp-community" name="snmp_community" value="public" required>
+                                        <small class="form-text text-muted">SNMP community string</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="add-snmp-version">{{ trans('plugins/fiberhome-olt-manager::olt.snmp_version') }} <span class="text-danger">*</span></label>
+                                        <select class="form-control" id="add-snmp-version" name="snmp_version" required>
+                                            <option value="1">v1</option>
+                                            <option value="2c" selected>v2c</option>
+                                            <option value="3">v3</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="add-snmp-port">{{ trans('plugins/fiberhome-olt-manager::olt.snmp_port') }}</label>
+                                        <input type="number" class="form-control" id="add-snmp-port" name="snmp_port" value="161" min="1" max="65535">
+                                        <small class="form-text text-muted">Default: 161</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <button type="button" class="btn btn-info btn-block" id="test-connection-btn">
+                                        <i class="fa fa-plug"></i> Test Connection
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                        <i class="fa fa-times"></i> {{ trans('plugins/fiberhome-olt-manager::olt.cancel') }}
+                        <i class="fa fa-times"></i> {{ trans('core/base::forms.cancel') }}
                     </button>
-                    <button type="submit" class="btn btn-primary" id="submit-olt-btn">
-                        <i class="fa fa-save"></i> {{ trans('plugins/fiberhome-olt-manager::olt.add_olt') }}
+                    <button type="submit" class="btn btn-primary" id="save-olt-btn">
+                        <i class="fa fa-save"></i> {{ trans('core/base::forms.save') }}
                     </button>
                 </div>
             </form>
@@ -125,41 +177,70 @@
 
 <script>
 $(document).ready(function() {
-    // Model options for each vendor
-    var modelOptions = {
-        'fiberhome': [
-            { value: 'AN5516-01', text: 'AN5516-01' },
-            { value: 'AN5516-02', text: 'AN5516-02' },
-            { value: 'AN5516-04', text: 'AN5516-04' },
-            { value: 'AN5516-06', text: 'AN5516-06' },
-            { value: 'AN5516-10', text: 'AN5516-10' }
-        ],
-        'huawei': [
-            { value: 'MA5608T', text: 'MA5608T' },
-            { value: 'MA5680T', text: 'MA5680T' },
-            { value: 'MA5683T', text: 'MA5683T' },
-            { value: 'MA5800', text: 'MA5800' }
-        ],
-        'zte': [
-            { value: 'C300', text: 'C300' },
-            { value: 'C320', text: 'C320' },
-            { value: 'C600', text: 'C600' },
-            { value: 'C650', text: 'C650' }
-        ]
-    };
-    
-    // Update model options when vendor changes
+    // Vendor change handler - load models dynamically
     $('#add-vendor').on('change', function() {
         var vendor = $(this).val();
         var $modelSelect = $('#add-model');
+        var $modelDetails = $('#model-details');
         
-        $modelSelect.empty();
-        $modelSelect.append('<option value="">{{ trans("plugins/fiberhome-olt-manager::olt.select_model") }}</option>');
+        // Reset model selection
+        $modelSelect.empty().prop('disabled', true);
+        $modelDetails.hide();
         
-        if (vendor && modelOptions[vendor]) {
-            $.each(modelOptions[vendor], function(index, model) {
-                $modelSelect.append('<option value="' + model.value + '">' + model.text + '</option>');
-            });
+        if (!vendor) {
+            $modelSelect.append('<option value="">{{ trans("plugins/fiberhome-olt-manager::olt.select_vendor_first") }}</option>');
+            return;
+        }
+        
+        // Show loading
+        $modelSelect.append('<option value="">Loading models...</option>');
+        
+        // Fetch models from API
+        $.ajax({
+            url: '/api/fiberhome-olt/vendors/' + vendor + '/models',
+            method: 'GET',
+            success: function(response) {
+                $modelSelect.empty();
+                $modelSelect.append('<option value="">{{ trans("plugins/fiberhome-olt-manager::olt.select_model") }}</option>');
+                
+                if (response.success && response.data) {
+                    $.each(response.data, function(index, model) {
+                        $modelSelect.append(
+                            $('<option></option>')
+                                .val(model.value)
+                                .text(model.text)
+                                .data('model-info', model)
+                        );
+                    });
+                    $modelSelect.prop('disabled', false);
+                }
+            },
+            error: function() {
+                $modelSelect.empty();
+                $modelSelect.append('<option value="">Error loading models</option>');
+                Botble.showError('Failed to load models for selected vendor');
+            }
+        });
+    });
+    
+    // Model change handler - show model details
+    $('#add-model').on('change', function() {
+        var $selectedOption = $(this).find('option:selected');
+        var modelInfo = $selectedOption.data('model-info');
+        var $modelDetails = $('#model-details');
+        
+        if (modelInfo) {
+            $('#model-description').text(modelInfo.description || '-');
+            $('#model-max-ports').text(modelInfo.max_ports || '-');
+            $('#model-max-onus').text(modelInfo.max_onus || '-');
+            $('#model-technology').text(
+                modelInfo.technology && modelInfo.technology.length > 0 
+                    ? modelInfo.technology.join(', ') 
+                    : '-'
+            );
+            $modelDetails.fadeIn();
+        } else {
+            $modelDetails.hide();
         }
     });
     
@@ -170,59 +251,61 @@ $(document).ready(function() {
         var $message = $('#connection-message');
         
         // Validate required fields
-        var ipAddress = $('#add-ip').val();
-        var snmpCommunity = $('#add-snmp-community').val();
-        var snmpVersion = $('#add-snmp-version').val();
-        var snmpPort = $('#add-snmp-port').val();
+        var ip = $('#add-ip').val();
+        var community = $('#add-snmp-community').val();
+        var version = $('#add-snmp-version').val();
+        var port = $('#add-snmp-port').val() || 161;
         
-        if (!ipAddress || !snmpCommunity) {
-            $status.removeClass('alert-success alert-danger alert-info').addClass('alert-warning').show();
-            $message.text('{{ trans("plugins/fiberhome-olt-manager::olt.fill_required_fields") }}');
+        if (!ip || !community || !version) {
+            $status.removeClass('alert-success alert-danger').addClass('alert-warning').show();
+            $message.text('Please fill in IP address, SNMP community, and version first.');
             return;
         }
         
         // Show loading
-        $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> {{ trans("plugins/fiberhome-olt-manager::olt.testing") }}');
+        $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Testing...');
         $status.removeClass('alert-success alert-danger alert-warning').addClass('alert-info').show();
-        $message.text('{{ trans("plugins/fiberhome-olt-manager::olt.testing_connection") }}');
+        $message.text('Testing connection to OLT device...');
         
         // Test connection
         $.ajax({
             url: '/api/fiberhome-olt/devices/test-connection',
             method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
             data: {
-                ip_address: ipAddress,
-                snmp_community: snmpCommunity,
-                snmp_version: snmpVersion,
-                snmp_port: snmpPort
+                ip_address: ip,
+                snmp_community: community,
+                snmp_version: version,
+                snmp_port: port,
+                _token: $('meta[name="csrf-token"]').attr('content')
             },
             success: function(response) {
                 if (response.success) {
                     $status.removeClass('alert-info alert-danger').addClass('alert-success');
-                    $message.html('<strong>{{ trans("plugins/fiberhome-olt-manager::olt.connection_successful") }}</strong><br>' + 
-                                 (response.data ? response.data.system_description || '' : ''));
-                    $('#submit-olt-btn').prop('disabled', false);
+                    var msg = 'Connection successful!';
+                    if (response.data) {
+                        if (response.data.system_name) {
+                            msg += ' System: ' + response.data.system_name;
+                        }
+                        if (response.data.system_description) {
+                            msg += ' (' + response.data.system_description + ')';
+                        }
+                    }
+                    $message.text(msg);
                 } else {
                     $status.removeClass('alert-info alert-success').addClass('alert-danger');
-                    $message.html('<strong>{{ trans("plugins/fiberhome-olt-manager::olt.connection_failed") }}</strong><br>' + 
-                                 (response.message || ''));
-                    $('#submit-olt-btn').prop('disabled', true);
+                    $message.text('Connection failed: ' + (response.message || 'Unknown error'));
                 }
             },
             error: function(xhr) {
                 $status.removeClass('alert-info alert-success').addClass('alert-danger');
-                var errorMsg = '{{ trans("plugins/fiberhome-olt-manager::olt.connection_error") }}';
+                var errorMsg = 'Connection failed';
                 if (xhr.responseJSON && xhr.responseJSON.message) {
-                    errorMsg += '<br>' + xhr.responseJSON.message;
+                    errorMsg += ': ' + xhr.responseJSON.message;
                 }
-                $message.html('<strong>{{ trans("plugins/fiberhome-olt-manager::olt.connection_failed") }}</strong><br>' + errorMsg);
-                $('#submit-olt-btn').prop('disabled', true);
+                $message.text(errorMsg);
             },
             complete: function() {
-                $btn.prop('disabled', false).html('<i class="fa fa-plug"></i> {{ trans("plugins/fiberhome-olt-manager::olt.test_connection") }}');
+                $btn.prop('disabled', false).html('<i class="fa fa-plug"></i> Test Connection');
             }
         });
     });
@@ -231,24 +314,31 @@ $(document).ready(function() {
     $('#add-olt-form').on('submit', function(e) {
         e.preventDefault();
         
-        var $submitBtn = $('#submit-olt-btn');
-        $submitBtn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> {{ trans("plugins/fiberhome-olt-manager::olt.adding") }}');
+        var $form = $(this);
+        var $btn = $('#save-olt-btn');
+        var formData = $form.serialize();
+        
+        $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Saving...');
         
         $.ajax({
             url: '/api/fiberhome-olt/devices',
             method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-            data: $(this).serialize(),
+            data: formData,
             success: function(response) {
                 if (response.success) {
                     Botble.showSuccess(response.message || '{{ trans("plugins/fiberhome-olt-manager::olt.add_success") }}');
                     $('#add-olt-modal').modal('hide');
-                    $('#olt-table').DataTable().ajax.reload();
-                    $('#add-olt-form')[0].reset();
+                    $form[0].reset();
+                    $('#add-model').empty().append('<option value="">{{ trans("plugins/fiberhome-olt-manager::olt.select_vendor_first") }}</option>').prop('disabled', true);
+                    $('#model-details').hide();
                     $('#connection-status').hide();
-                    $('#add-model').empty().append('<option value="">{{ trans("plugins/fiberhome-olt-manager::olt.select_model") }}</option>');
+                    
+                    // Reload DataTable
+                    if (window.oltTable) {
+                        window.oltTable.ajax.reload();
+                    } else {
+                        location.reload();
+                    }
                 } else {
                     Botble.showError(response.message || '{{ trans("plugins/fiberhome-olt-manager::olt.add_error") }}');
                 }
@@ -259,7 +349,7 @@ $(document).ready(function() {
                     var errorMessage = '';
                     
                     Object.keys(errors).forEach(function(key) {
-                        errorMessage += errors[key][0] + '<br>';
+                        errorMessage += errors[key].join(', ') + '<br>';
                     });
                     
                     Botble.showError(errorMessage);
@@ -268,7 +358,7 @@ $(document).ready(function() {
                 }
             },
             complete: function() {
-                $submitBtn.prop('disabled', false).html('<i class="fa fa-save"></i> {{ trans("plugins/fiberhome-olt-manager::olt.add_olt") }}');
+                $btn.prop('disabled', false).html('<i class="fa fa-save"></i> {{ trans("core/base::forms.save") }}');
             }
         });
     });
@@ -276,9 +366,9 @@ $(document).ready(function() {
     // Reset form when modal is closed
     $('#add-olt-modal').on('hidden.bs.modal', function() {
         $('#add-olt-form')[0].reset();
+        $('#add-model').empty().append('<option value="">{{ trans("plugins/fiberhome-olt-manager::olt.select_vendor_first") }}</option>').prop('disabled', true);
+        $('#model-details').hide();
         $('#connection-status').hide();
-        $('#submit-olt-btn').prop('disabled', false);
-        $('#add-model').empty().append('<option value="">{{ trans("plugins/fiberhome-olt-manager::olt.select_model") }}</option>');
     });
 });
 </script>

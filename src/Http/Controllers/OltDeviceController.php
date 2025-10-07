@@ -67,11 +67,29 @@ class OltDeviceController extends BaseController
         }
 
         try {
-            // Create device
-            $device = OltDevice::create(array_merge($request->all(), [
+            // Get model information from config
+            $vendors = config('olt-vendors.vendors', []);
+            $modelInfo = null;
+            
+            if (isset($vendors[$request->vendor]['models'][$request->model])) {
+                $modelInfo = $vendors[$request->vendor]['models'][$request->model];
+            }
+            
+            // Prepare device data
+            $deviceData = array_merge($request->all(), [
                 'snmp_port' => $request->snmp_port ?? 161,
                 'status' => 'pending'
-            ]));
+            ]);
+            
+            // Add model information if available
+            if ($modelInfo) {
+                $deviceData['max_ports'] = $modelInfo['max_ports'] ?? null;
+                $deviceData['max_onus'] = $modelInfo['max_onus'] ?? null;
+                $deviceData['technology'] = $modelInfo['technology'] ?? null;
+            }
+            
+            // Create device
+            $device = OltDevice::create($deviceData);
 
             // Test connection
             if ($this->snmp->testConnection($device)) {

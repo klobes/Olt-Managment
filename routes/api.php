@@ -64,4 +64,11 @@ Route::group([
         Route::post('{id}/assign', [BandwidthProfileController::class, 'assign'])->name('assign');
         Route::post('datatable', [BandwidthProfileController::class, 'getTable'])->name('datatable');
     });
+    
+    // Vendor API
+    Route::group(['prefix' => 'vendors', 'as' => 'vendors.'], function () {
+        Route::get('/', [\Botble\FiberhomeOltManager\Http\Controllers\VendorController::class, 'getVendors'])->name('list');
+        Route::get('{vendor}/models', [\Botble\FiberhomeOltManager\Http\Controllers\VendorController::class, 'getModels'])->name('models');
+        Route::get('{vendor}/models/{model}', [\Botble\FiberhomeOltManager\Http\Controllers\VendorController::class, 'getModelDetails'])->name('model-details');
+    });
 });
