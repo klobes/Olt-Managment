@@ -41,7 +41,7 @@ class OltDeviceController extends BaseController
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'ip_address' => 'required|ip|unique:olt_devices',
+            'ip_address' => 'required|ip|unique:om_olts',
             'vendor' => 'required|string|in:fiberhome,huawei,zte',
             'model' => 'required|string|max:255',
             'snmp_community' => 'required|string|max:255',
@@ -67,11 +67,29 @@ class OltDeviceController extends BaseController
         }
 
         try {
-            // Create device
-            $device = OltDevice::create(array_merge($request->all(), [
+            // Get model information from config
+            $vendors = config('olt-vendors.vendors', []);
+            $modelInfo = null;
+            
+            if (isset($vendors[$request->vendor]['models'][$request->model])) {
+                $modelInfo = $vendors[$request->vendor]['models'][$request->model];
+            }
+            
+            // Prepare device data
+            $deviceData = array_merge($request->all(), [
                 'snmp_port' => $request->snmp_port ?? 161,
                 'status' => 'pending'
-            ]));
+            ]);
+            
+            // Add model information if available
+            if ($modelInfo) {
+                $deviceData['max_ports'] = $modelInfo['max_ports'] ?? null;
+                $deviceData['max_onus'] = $modelInfo['max_onus'] ?? null;
+                $deviceData['technology'] = $modelInfo['technology'] ?? null;
+            }
+            
+            // Create device
+            $device = OltDevice::create($deviceData);
 
             // Test connection
             if ($this->snmp->testConnection($device)) {
@@ -147,7 +165,7 @@ class OltDeviceController extends BaseController
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'ip_address' => 'required|ip|unique:olt_devices,ip_address,' . $id,
+            'ip_address' => 'required|ip|unique:om_olts,ip_address,' . $id,
             'snmp_community' => 'required|string|max:255',
             'snmp_version' => 'required|in:1,2c,3',
             'snmp_port' => 'required|integer|min:1|max:65535',
@@ -274,7 +292,7 @@ class OltDeviceController extends BaseController
     public function getTable(Request $request)
     {
         if ($request->ajax()) {
-            $devices = OltDevice::with(['onus'])->select('olt_devices.*');
+            $devices = OltDevice::with(['onus'])->select('om_olts.*');
             
             return datatables()
                 ->eloquent($devices)
